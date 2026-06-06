@@ -85,6 +85,24 @@ cd frontend && npm run build
 
 Serve `frontend/dist/frontend/browser` behind a reverse proxy and route `/api` to the Go service.
 
+## systemd deployment
+
+The included unit at `deploy/luna.service` runs the app as the `app` user from
+`/srv/test/shoe-ecommerce`. Before starting the service, make sure that account
+owns the deployed project path because `run.sh` writes runtime files to `.run/`,
+`backend/data/`, and `frontend/proxy.conf.runtime.json`.
+
+```bash
+sudo useradd --system --create-home --shell /usr/sbin/nologin app
+sudo chown -R app:app /srv/test/shoe-ecommerce
+sudo chmod +x /srv/test/shoe-ecommerce/run.sh
+sudo cp /srv/test/shoe-ecommerce/deploy/luna.service /etc/systemd/system/luna.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now luna.service
+```
+
+If the `app` user already exists, `useradd` may report that and can be skipped.
+
 ## API endpoints
 
 | Endpoint | Description |

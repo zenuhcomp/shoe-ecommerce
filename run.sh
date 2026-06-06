@@ -7,6 +7,7 @@ ENV_FILE="${ENV_FILE:-$ROOT/backend/.env}"
 BACKEND_DIR="$ROOT/backend"
 FRONTEND_DIR="$ROOT/frontend"
 RUN_DIR="$ROOT/.run"
+BACKEND_BIN="${BACKEND_BIN:-$BACKEND_DIR/backend}"
 PROXY_FILE="$FRONTEND_DIR/proxy.conf.runtime.json"
 PID_BACKEND="$RUN_DIR/backend.pid"
 PID_FRONTEND="$RUN_DIR/frontend.pid"
@@ -88,15 +89,25 @@ echo "=============================================="
 echo ""
 
 echo "Starting backend..."
-(
-  cd "$BACKEND_DIR"
-  go run . >>"$LOG_BACKEND" 2>&1
-) &
+if [[ -x "$BACKEND_BIN" ]]; then
+  (
+    cd "$BACKEND_DIR"
+    exec "$BACKEND_BIN" >>"$LOG_BACKEND" 2>&1
+  ) &
+else
+  (
+    cd "$BACKEND_DIR"
+    exec go run . >>"$LOG_BACKEND" 2>&1
+  ) &
+fi
 echo $! >"$PID_BACKEND"
 
 echo "Waiting for API health..."
 for _ in $(seq 1 40); do
   if curl -sf "http://localhost:${BACKEND_PORT}/api/health" >/dev/null 2>&1; then
+    break
+  fi
+  if ! kill -0 "$(cat "$PID_BACKEND")" 2>/dev/null; then
     break
   fi
   sleep 0.5
