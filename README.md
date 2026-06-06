@@ -83,7 +83,16 @@ cd backend && go build -o bin/api .
 cd frontend && npm run build
 ```
 
-Serve `frontend/dist/frontend/browser` behind a reverse proxy and route `/api` to the Go service.
+Deploy the Go binary plus `frontend/dist/frontend/browser`. The Go server can
+serve the Angular bundle directly when `FRONTEND_DIST_DIR` points at that folder,
+so the production server does not need Node or npm.
+
+```bash
+SERVE_STATIC=1 FRONTEND_DIST_DIR=/srv/test/shoe-ecommerce/frontend/dist/frontend/browser ./run.sh
+```
+
+You can also serve `frontend/dist/frontend/browser` behind Nginx or Caddy and
+route `/api` to the Go service.
 
 ## systemd deployment
 

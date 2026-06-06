@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -128,6 +130,11 @@ func main() {
 		})
 	})
 
+	if staticDir := frontendDistDir(); staticDir != "" {
+		log.Printf("Serving frontend from %s", staticDir)
+		r.NotFound(spaHandler(staticDir))
+	}
+
 	addr := ":" + cfg.BackendPort
 	srv := &http.Server{Addr: addr, Handler: r}
 
@@ -145,4 +152,62 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	_ = srv.Shutdown(shutdownCtx)
+}
+
+func frontendDistDir() string {
+	candidates := []string{}
+	if p := os.Getenv("FRONTEND_DIST_DIR"); p != "" {
+		candidates = append(candidates, p)
+	}
+	candidates = append(candidates,
+		"../frontend/dist/frontend/browser",
+		"frontend/dist/frontend/browser",
+	)
+	if exe, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exe)
+		candidates = append(candidates,
+			filepath.Join(exeDir, "../frontend/dist/frontend/browser"),
+			filepath.Join(exeDir, "../../frontend/dist/frontend/browser"),
+		)
+	}
+
+	for _, candidate := range candidates {
+		if candidate == "" {
+			continue
+		}
+		abs, err := filepath.Abs(candidate)
+		if err != nil {
+			continue
+		}
+		if info, err := os.Stat(filepath.Join(abs, "index.html")); err == nil && !info.IsDir() {
+			return abs
+		}
+	}
+	return ""
+}
+
+func spaHandler(staticDir string) http.HandlerFunc {
+	fileServer := http.FileServer(http.Dir(staticDir))
+	return func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/api/") || r.URL.Path == "/api" {
+			http.NotFound(w, r)
+			return
+		}
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			http.NotFound(w, r)
+			return
+		}
+
+		path := filepath.Clean(strings.TrimPrefix(r.URL.Path, "/"))
+		if path == "." {
+			path = "index.html"
+		}
+		fullPath := filepath.Join(staticDir, path)
+		if info, err := os.Stat(fullPath); err == nil && !info.IsDir() {
+			fileServer.ServeHTTP(w, r)
+			return
+		}
+
+		http.ServeFile(w, r, filepath.Join(staticDir, "index.html"))
+	}
 }

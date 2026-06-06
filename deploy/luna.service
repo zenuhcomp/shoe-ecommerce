@@ -8,6 +8,8 @@ User=app
 Group=app
 WorkingDirectory=/srv/test/shoe-ecommerce
 Environment=ENV_FILE=/srv/test/shoe-ecommerce/backend/.env
+Environment=SERVE_STATIC=1
+Environment=FRONTEND_DIST_DIR=/srv/test/shoe-ecommerce/frontend/dist/frontend/browser
 ExecStart=/srv/test/shoe-ecommerce/run.sh
 Restart=always
 RestartSec=5

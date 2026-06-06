@@ -29,12 +29,15 @@ set +a
 FRONTEND_PORT="${FRONTEND_PORT:-${frontend_port:-4204}}"
 BACKEND_PORT="${BACKEND_PORT:-${backend_port:-8084}}"
 DATABASE_MODE="${DATABASE_MODE:-${database_mode:-test}}"
+SERVE_STATIC="${SERVE_STATIC:-${serve_static:-0}}"
+FRONTEND_DIST_DIR="${FRONTEND_DIST_DIR:-$FRONTEND_DIR/dist/frontend/browser}"
 
 export PORT="$BACKEND_PORT"
 export BACKEND_PORT
 export FRONTEND_PORT
 export DATABASE_MODE
 export ENV_FILE
+export FRONTEND_DIST_DIR
 
 if [[ -z "${CORS_ORIGINS:-}" ]]; then
   export CORS_ORIGINS="http://localhost:${FRONTEND_PORT},http://127.0.0.1:${FRONTEND_PORT}"
@@ -83,7 +86,12 @@ echo "=============================================="
 echo " Env file       : $ENV_FILE"
 echo " DATABASE_MODE  : $DATABASE_MODE"
 echo " Backend        : http://localhost:${BACKEND_PORT}"
-echo " Frontend       : http://localhost:${FRONTEND_PORT}"
+if [[ "$SERVE_STATIC" == "1" ]]; then
+  echo " Frontend       : http://localhost:${BACKEND_PORT} (static)"
+  echo " Frontend dist  : $FRONTEND_DIST_DIR"
+else
+  echo " Frontend       : http://localhost:${FRONTEND_PORT}"
+fi
 echo " API proxy      : $PROXY_FILE"
 echo "=============================================="
 echo ""
@@ -124,12 +132,61 @@ health="$(curl -sf "http://localhost:${BACKEND_PORT}/api/health")"
 echo "Backend ready: $health"
 echo ""
 
+if [[ "$SERVE_STATIC" == "1" ]]; then
+  if [[ ! -f "$FRONTEND_DIST_DIR/index.html" ]]; then
+    echo "Static frontend build is missing: $FRONTEND_DIST_DIR/index.html"
+    echo "Run npm run build in $FRONTEND_DIR before starting with SERVE_STATIC=1."
+    stop_process "$PID_BACKEND" "backend"
+    exit 1
+  fi
+
+  echo "Static app running. Press Ctrl+C to stop."
+  echo "  App:    http://localhost:${BACKEND_PORT}"
+  echo "  API:    http://localhost:${BACKEND_PORT}/api/health"
+  echo "  Logs:   $LOG_BACKEND"
+  echo ""
+
+  while true; do
+    if ! kill -0 "$(cat "$PID_BACKEND")" 2>/dev/null; then
+      echo "Backend exited. Last log lines:"
+      tail -n 50 "$LOG_BACKEND" || true
+      exit 1
+    fi
+    sleep 1
+  done
+fi
+
 echo "Starting frontend (ng serve)..."
+if [[ ! -x "$FRONTEND_DIR/node_modules/.bin/ng" ]]; then
+  echo "Frontend dependencies are missing. Run npm install in $FRONTEND_DIR."
+  stop_process "$PID_BACKEND" "backend"
+  exit 1
+fi
+
 (
   cd "$FRONTEND_DIR"
-  npm start -- --port "$FRONTEND_PORT" --proxy-config proxy.conf.runtime.json >>"$LOG_FRONTEND" 2>&1
+  exec npm start -- --port "$FRONTEND_PORT" --proxy-config proxy.conf.runtime.json >>"$LOG_FRONTEND" 2>&1
 ) &
 echo $! >"$PID_FRONTEND"
+
+echo "Waiting for frontend..."
+for _ in $(seq 1 80); do
+  if curl -sf "http://localhost:${FRONTEND_PORT}" >/dev/null 2>&1; then
+    break
+  fi
+  if ! kill -0 "$(cat "$PID_FRONTEND")" 2>/dev/null; then
+    break
+  fi
+  sleep 0.5
+done
+
+if ! curl -sf "http://localhost:${FRONTEND_PORT}" >/dev/null 2>&1; then
+  echo "Frontend failed to start. Last log lines:"
+  tail -n 50 "$LOG_FRONTEND" || true
+  stop_process "$PID_FRONTEND" "frontend"
+  stop_process "$PID_BACKEND" "backend"
+  exit 1
+fi
 
 echo ""
 echo "Stack running. Press Ctrl+C to stop."
@@ -139,4 +196,18 @@ echo "  Logs:   $LOG_BACKEND"
 echo "          $LOG_FRONTEND"
 echo ""
 
-wait "$(cat "$PID_BACKEND")" "$(cat "$PID_FRONTEND")" 2>/dev/null || true
+while true; do
+  if ! kill -0 "$(cat "$PID_BACKEND")" 2>/dev/null; then
+    echo "Backend exited. Last log lines:"
+    tail -n 50 "$LOG_BACKEND" || true
+    stop_process "$PID_FRONTEND" "frontend"
+    exit 1
+  fi
+  if ! kill -0 "$(cat "$PID_FRONTEND")" 2>/dev/null; then
+    echo "Frontend exited. Last log lines:"
+    tail -n 50 "$LOG_FRONTEND" || true
+    stop_process "$PID_BACKEND" "backend"
+    exit 1
+  fi
+  sleep 1
+done
