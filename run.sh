@@ -29,8 +29,14 @@ set +a
 FRONTEND_PORT="${FRONTEND_PORT:-${frontend_port:-4204}}"
 BACKEND_PORT="${BACKEND_PORT:-${backend_port:-8084}}"
 DATABASE_MODE="${DATABASE_MODE:-${database_mode:-test}}"
-SERVE_STATIC="${SERVE_STATIC:-${serve_static:-0}}"
 FRONTEND_DIST_DIR="${FRONTEND_DIST_DIR:-$FRONTEND_DIR/dist/frontend/browser}"
+SERVE_STATIC="${SERVE_STATIC:-${serve_static:-}}"
+if [[ -z "$SERVE_STATIC" ]]; then
+  SERVE_STATIC=0
+  if [[ -f "$FRONTEND_DIST_DIR/index.html" && ! -x "$FRONTEND_DIR/node_modules/.bin/ng" ]]; then
+    SERVE_STATIC=1
+  fi
+fi
 
 export PORT="$BACKEND_PORT"
 export BACKEND_PORT
@@ -92,7 +98,9 @@ if [[ "$SERVE_STATIC" == "1" ]]; then
 else
   echo " Frontend       : http://localhost:${FRONTEND_PORT}"
 fi
-echo " API proxy      : $PROXY_FILE"
+if [[ "$SERVE_STATIC" != "1" ]]; then
+  echo " API proxy      : $PROXY_FILE"
+fi
 echo "=============================================="
 echo ""
 
