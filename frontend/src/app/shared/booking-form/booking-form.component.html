@@ -1,0 +1,39 @@
+@if (submitted()) {
+  <p class="success">{{ successMessage() }}</p>
+} @else {
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="booking-form">
+    <div class="field">
+      <label for="name">Name *</label>
+      <input id="name" type="text" formControlName="name" />
+    </div>
+    <div class="field">
+      <label for="phone">Phone *</label>
+      <input id="phone" type="tel" formControlName="phone" />
+    </div>
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" type="email" formControlName="email" />
+    </div>
+    <div class="field">
+      <label for="service">Preferred style</label>
+      <select id="service" formControlName="serviceSlug">
+        <option value="">Select a shoe style</option>
+        @for (svc of services; track svc.id) {
+          <option [value]="svc.slug">{{ svc.name }} — KES {{ svc.priceKes }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="when">Preferred delivery / pickup</label>
+      <input id="when" type="text" formControlName="preferredAt" placeholder="e.g. Friday pickup or Nairobi delivery" />
+    </div>
+    <div class="field">
+      <label for="message">Notes</label>
+      <textarea id="message" rows="3" formControlName="message"></textarea>
+    </div>
+    @if (errorMessage()) {
+      <p class="error">{{ errorMessage() }}</p>
+    }
+    <button type="submit" class="submit">Send Order Inquiry</button>
+  </form>
+}

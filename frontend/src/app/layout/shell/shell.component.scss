@@ -1,0 +1,99 @@
+.announcement-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1002;
+  min-height: var(--announcement-height);
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent), var(--color-primary));
+  background-size: 200% 100%;
+  animation: barShift 20s linear infinite;
+  padding: 0.45rem 0;
+  padding-top: max(0.45rem, env(safe-area-inset-top));
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.announcement-text {
+  display: inline-block;
+  white-space: nowrap;
+  color: #fff;
+  font-size: clamp(0.72rem, 2.5vw, 0.82rem);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  animation: ticker 28s linear infinite;
+}
+
+@keyframes barShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@keyframes ticker {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.main-content {
+  min-height: 60vh;
+}
+
+.sticky-book {
+  position: fixed;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.75rem 1.25rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--color-accent), #d4b98a);
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(196, 165, 116, 0.45);
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --announcement-height: 2.75rem;
+  }
+
+  .announcement-text {
+    animation: none;
+    white-space: normal;
+    text-align: center;
+    width: 100%;
+    padding: 0 1rem;
+  }
+
+  .announcement-bar {
+    animation: none;
+    min-height: var(--announcement-height);
+  }
+}
+
+@media (max-width: 480px) {
+  .sticky-book {
+    left: max(1rem, env(safe-area-inset-left));
+    right: max(1rem, env(safe-area-inset-right));
+    text-align: center;
+  }
+}

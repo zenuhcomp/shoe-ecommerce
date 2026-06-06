@@ -1,0 +1,145 @@
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+
+  h1 {
+    font-family: var(--font-heading);
+    font-size: 1.75rem;
+    margin: 0 0 0.25rem;
+    color: #1c2321;
+  }
+
+  p {
+    margin: 0;
+    color: #5c6b64;
+    font-size: 0.92rem;
+  }
+}
+
+.card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #dde5e0;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  text-decoration: none;
+
+  &.primary {
+    background: #2d4a3e;
+    color: #fff;
+  }
+
+  &.ghost {
+    background: #eef1ee;
+    color: #1c2321;
+  }
+
+  &.danger {
+    background: #fdecea;
+    color: #9b2c2c;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  th,
+  td {
+    text-align: left;
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid #e8eeea;
+    vertical-align: top;
+  }
+
+  th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #5c6b64;
+  }
+
+  .actions {
+    white-space: nowrap;
+    display: flex;
+    gap: 0.35rem;
+  }
+}
+
+.form-panel {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e8eeea;
+
+  label {
+    display: grid;
+    gap: 0.3rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #3d4a44;
+  }
+
+  input,
+  select,
+  textarea {
+    font: inherit;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid #cfd9d3;
+    border-radius: 8px;
+  }
+
+  textarea {
+    min-height: 80px;
+    resize: vertical;
+  }
+
+  .row {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+
+  &.success {
+    background: #e8f5e9;
+    color: #2e5c3e;
+  }
+
+  &.error {
+    background: #fdecea;
+    color: #9b2c2c;
+  }
+}

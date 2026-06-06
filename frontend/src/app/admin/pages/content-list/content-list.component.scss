@@ -1,0 +1,30 @@
+@use '../../shared/admin-page.scss';
+
+.check {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.actions-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.form-panel label {
+  display: grid;
+  gap: 0.3rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.form-panel input,
+.form-panel textarea {
+  font: inherit;
+  padding: 0.55rem;
+  border: 1px solid #cfd9d3;
+  border-radius: 8px;
+}

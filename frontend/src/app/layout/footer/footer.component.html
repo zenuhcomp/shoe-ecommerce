@@ -1,0 +1,43 @@
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <p class="logo-line">
+        <span class="mark">◆</span> {{ site.brandName }} <em>{{ site.brandScript }}</em>
+      </p>
+      <p class="tagline">{{ site.metaDescription }}</p>
+    </div>
+
+    <div>
+      <h4>Quick Links</h4>
+      <nav class="footer-links">
+        <a routerLink="/">Home</a>
+        @for (link of nav; track link.path) {
+          <a [routerLink]="link.path">{{ link.label }}</a>
+        }
+      </nav>
+    </div>
+
+    <div>
+      <h4>Collections</h4>
+      <nav class="footer-links">
+        <a routerLink="/collections">Court Pumps</a>
+        <a routerLink="/collections">Ladies Oxfords</a>
+        <a routerLink="/collections">Block Heels</a>
+        <a routerLink="/collections">Loafers</a>
+        <a routerLink="/delivery">Delivery</a>
+        <a routerLink="/shoe-care">Shoe Care</a>
+      </nav>
+    </div>
+
+    <div>
+      <h4>Get in Touch</h4>
+      <div class="footer-contact">
+        <a [href]="site.instagramUrl" target="_blank" rel="noopener">Instagram</a>
+        <a [href]="site.tiktokUrl" target="_blank" rel="noopener">TikTok</a>
+        <a [href]="'mailto:' + site.email">Email</a>
+        <a [href]="telHref(site.phone)">{{ site.phone }}</a>
+      </div>
+    </div>
+  </div>
+  <p class="copyright">{{ site.copyright }}</p>
+</footer>

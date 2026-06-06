@@ -1,0 +1,14 @@
+<div class="faq-list">
+  @for (item of items; track item.id) {
+    <div class="faq-item" [class.open]="openId() === item.id">
+      <button type="button" (click)="toggle(item.id)">
+        <span class="num">{{ item.id | number: '2.0-0' }}</span>
+        {{ item.question }}
+        <span class="chevron">▼</span>
+      </button>
+      @if (openId() === item.id) {
+        <div class="answer">{{ item.answer }}</div>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,145 @@
+@if (home$ | async; as home) {
+  <section class="hero" id="page-top">
+    <div class="hero-inner">
+      <span class="hero-badge">{{ home.site.heroBadge }}</span>
+      <h1>{{ home.site.heroTitle }}</h1>
+      <p class="hero-script">{{ home.site.tagline }}</p>
+      <p class="hero-sub">{{ home.site.heroSubtitle }}</p>
+      <div class="hero-actions">
+        <a class="btn primary" [href]="home.site.whatsAppUrl" target="_blank" rel="noopener">Shop on WhatsApp</a>
+        <a class="btn outline" routerLink="/collections">Browse Collections</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="press section">
+    <p class="press-label">~ As Featured In ~</p>
+    <app-section-heading
+      title="The Shoes <span class='accent'>Professionals Trust</span>"
+      [center]="true"
+    />
+    <div class="press-grid">
+      @for (p of home.press; track p.name) {
+        <div class="press-item">
+          <strong>{{ p.name }}</strong>
+          <span>{{ p.note }}</span>
+        </div>
+      }
+    </div>
+    <blockquote class="press-quote">
+      "Nairobi's go-to for polished office footwear — curated styles that look sharp from nine to five and beyond."
+    </blockquote>
+  </section>
+
+  <section class="section features">
+    <app-section-heading
+      eyebrow="~ Why Luna Collections ~"
+      title="What Makes Us <span class='accent'>Different</span>"
+      subtitle="Every pair chosen for the woman who shows up ready to lead"
+    />
+    <div class="feature-grid">
+      @for (f of home.features; track f.title) {
+        <article>
+          <span class="icon">{{ f.icon }}</span>
+          <h3>{{ f.title }}</h3>
+          <p>{{ f.description }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="section lookbook">
+    <app-section-heading
+      eyebrow="~ Lookbook ~"
+      title="Styles That <span class='accent'>Lead the Room</span>"
+      subtitle="A glimpse of our official footwear collection"
+    />
+    <div class="lookbook-grid">
+      @for (item of home.gallery; track item.id) {
+        <figure>
+          <img [src]="item.imageUrl | webpImage:560:70" [alt]="item.alt" loading="lazy" decoding="async" />
+          <figcaption>{{ item.title }}</figcaption>
+        </figure>
+      }
+    </div>
+    <div class="section-cta">
+      <a routerLink="/gallery">View Full Gallery →</a>
+    </div>
+  </section>
+
+  <section class="section services-preview">
+    <app-section-heading
+      eyebrow="~ Best Sellers ~"
+      title="Find Your <span class='accent'>Perfect Pair</span>"
+      subtitle="From classic pumps to structured oxfords — office-ready and beautifully made"
+    />
+    <app-service-grid [services]="home.services" [site]="home.site" [compact]="true" />
+    <div class="section-cta">
+      <a routerLink="/collections">View All Collections →</a>
+    </div>
+  </section>
+
+  <section class="section pricing-banner">
+    <app-section-heading
+      eyebrow="~ Pricing ~"
+      [title]="home.site.pricingHighlight.title"
+      [subtitle]="home.site.pricingHighlight.subtitle"
+      [light]="true"
+    />
+    <div class="pricing-card">
+      <span class="badge">{{ home.site.pricingHighlight.badge }}</span>
+      <p class="range">
+        {{ home.site.pricingHighlight.currency }}
+        {{ home.site.pricingHighlight.priceFrom | number }} – {{ home.site.pricingHighlight.priceTo | number }}
+      </p>
+      <p class="note">{{ home.site.pricingHighlight.studioNote }}</p>
+      <p class="includes">{{ home.site.pricingHighlight.includes }}</p>
+      <a routerLink="/pricing" class="btn primary">View Full Price List ◆</a>
+    </div>
+  </section>
+
+  <section class="section reviews">
+    <app-section-heading
+      eyebrow="~ Happy Customers ~"
+      title="Steps That <span class='accent'>Speak for Themselves</span>"
+      subtitle="Real reviews from professionals who trust Luna Collections"
+    />
+    <div class="review-grid">
+      @for (r of home.reviews; track r.id) {
+        <article class="review-card">
+          <div class="avatar">{{ r.initials }}</div>
+          <div>
+            <strong>{{ r.name }}</strong>
+            <span>{{ r.handle }}</span>
+            <p class="stars">★★★★★</p>
+            <blockquote>{{ r.quote }}</blockquote>
+          </div>
+        </article>
+      }
+    </div>
+    <div class="section-cta">
+      <a routerLink="/reviews">Read All Reviews →</a>
+    </div>
+  </section>
+
+  <section class="section faq">
+    <app-section-heading
+      eyebrow="~ Got Questions? ~"
+      title="Frequently <span class='accent'>Asked Questions</span>"
+      subtitle="Sizing, delivery, exchanges, and everything in between"
+    />
+    <app-faq-list [items]="home.faq" />
+  </section>
+
+  <section class="section cta-final">
+    <app-section-heading
+      eyebrow="~ Ready to Step Up? ~"
+      title="Order Your Pair <span class='accent'>Today</span>"
+      subtitle="WhatsApp us for sizing help — walk-ins welcome at our Westlands showroom"
+      [light]="true"
+    />
+    <a class="btn primary large" [href]="home.site.whatsAppUrl" target="_blank" rel="noopener"
+      >Shop via WhatsApp ◆</a
+    >
+  </section>
+}

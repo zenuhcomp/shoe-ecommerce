@@ -1,0 +1,41 @@
+.section-heading {
+  margin-bottom: 2.5rem;
+
+  &.center {
+    text-align: center;
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .eyebrow {
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.5rem;
+  }
+
+  h2 {
+    font-family: var(--font-heading);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    color: var(--color-text);
+    line-height: 1.2;
+
+    :global(.accent) {
+      color: var(--color-primary);
+    }
+  }
+
+  .subtitle {
+    margin-top: 0.75rem;
+    color: var(--color-text-muted);
+    font-size: 1.05rem;
+  }
+
+  &.light {
+    .eyebrow { color: var(--color-accent-light); }
+    h2 { color: #fff; }
+    .subtitle { color: rgba(255, 255, 255, 0.75); }
+  }
+}

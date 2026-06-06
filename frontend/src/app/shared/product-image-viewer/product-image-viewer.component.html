@@ -1,0 +1,60 @@
+<div class="viewer" [class.has-images]="hasImages()">
+  <div class="toolbar">
+    <div class="mode-tabs">
+      <button type="button" [class.active]="mode() === 'gallery'" (click)="setMode('gallery')">Photos</button>
+      @if (has3d()) {
+        <button type="button" [class.active]="mode() === '3d'" (click)="setMode('3d')">3D View</button>
+      }
+    </div>
+    @if (hasImages()) {
+      <div class="zoom-controls">
+        <button type="button" aria-label="Zoom out" (click)="zoomOut()" [disabled]="zoom() <= minZoom">−</button>
+        <span>{{ (zoom() * 100) | number: '1.0-0' }}%</span>
+        <button type="button" aria-label="Zoom in" (click)="zoomIn()" [disabled]="zoom() >= maxZoom">+</button>
+      </div>
+    }
+  </div>
+
+  <div
+    class="stage"
+    [class.mode-3d]="mode() === '3d'"
+    (wheel)="onWheel($event)"
+    (pointerdown)="on3dPointerDown($event)"
+    (pointermove)="on3dPointerMove($event)"
+    (pointerup)="on3dPointerUp()"
+    (pointerleave)="on3dPointerUp()"
+    (pointercancel)="on3dPointerUp()"
+  >
+    @if (hasImages()) {
+      <img
+        [src]="displaySrc() | webpImage:980:74"
+        [alt]="alt"
+        [style.transform]="'scale(' + zoom() + ')'"
+        loading="eager"
+        decoding="async"
+        fetchpriority="high"
+        draggable="false"
+      />
+      @if (mode() === '3d') {
+        <span class="hint">Drag left or right to rotate</span>
+      }
+    } @else {
+      <div class="emoji-fallback">{{ emoji }}</div>
+    }
+  </div>
+
+  @if (hasImages() && mode() === 'gallery' && imageList().length > 1) {
+    <div class="thumbs">
+      @for (img of imageList(); track img; let i = $index) {
+        <button
+          type="button"
+          class="thumb"
+          [class.active]="activeIndex() === i"
+          (click)="selectImage(i)"
+        >
+          <img [src]="img | webpImage:160:62" [alt]="alt + ' view ' + (i + 1)" loading="lazy" decoding="async" />
+        </button>
+      }
+    </div>
+  }
+</div>

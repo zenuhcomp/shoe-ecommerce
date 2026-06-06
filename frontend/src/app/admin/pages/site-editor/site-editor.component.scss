@@ -1,0 +1,54 @@
+@use '../../shared/admin-page.scss';
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+
+  button {
+    padding: 0.45rem 0.85rem;
+    border: 1px solid #cfd9d3;
+    background: #fff;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    text-transform: capitalize;
+
+    &.active {
+      background: #2d4a3e;
+      color: #fff;
+      border-color: #2d4a3e;
+    }
+  }
+}
+
+.editor .row {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.editor label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.editor label.full {
+  grid-column: 1 / -1;
+}
+
+.editor input,
+.editor textarea {
+  font: inherit;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #cfd9d3;
+  border-radius: 8px;
+}
+
+.editor h3 {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.95rem;
+}

@@ -1,0 +1,137 @@
+<div class="page-header">
+  <div>
+    <h1>Site settings</h1>
+    <p>Branding, hero, contact, theme, and page copy</p>
+  </div>
+  <button type="button" class="btn primary" (click)="save()" [disabled]="saving()">
+    {{ saving() ? 'Saving…' : 'Save all changes' }}
+  </button>
+</div>
+
+@if (message()) {
+  <p class="alert success">{{ message() }}</p>
+}
+
+<div class="tabs">
+  @for (tab of ['brand', 'hero', 'contact', 'theme', 'about', 'house', 'aftercare', 'pricing']; track tab) {
+    <button type="button" [class.active]="activeTab() === tab" (click)="activeTab.set(tab)">
+      {{ tab }}
+    </button>
+  }
+</div>
+
+<form [formGroup]="form" class="card editor">
+  @if (activeTab() === 'brand') {
+    <div class="row">
+      <label>Brand name <input formControlName="brandName" /></label>
+      <label>Brand script <input formControlName="brandScript" /></label>
+      <label>Tagline <input formControlName="tagline" /></label>
+      <label>Announcement bar <input formControlName="announcement" /></label>
+      <label>Price range label <input formControlName="priceRange" /></label>
+      <label>Copyright <input formControlName="copyright" /></label>
+      <label class="full">Meta description <textarea formControlName="metaDescription"></textarea></label>
+    </div>
+  }
+
+  @if (activeTab() === 'hero') {
+    <div class="row">
+      <label>Hero badge <input formControlName="heroBadge" /></label>
+      <label>Hero title <input formControlName="heroTitle" /></label>
+      <label class="full">Hero subtitle <input formControlName="heroSubtitle" /></label>
+    </div>
+  }
+
+  @if (activeTab() === 'contact') {
+    <div class="row">
+      <label>Location <input formControlName="location" /></label>
+      <label>Studio address <input formControlName="studioAddress" /></label>
+      <label>Phone <input formControlName="phone" /></label>
+      <label>Email <input formControlName="email" /></label>
+      <label>WhatsApp URL <input formControlName="whatsAppUrl" /></label>
+      <label>Instagram <input formControlName="instagramUrl" /></label>
+      <label>TikTok <input formControlName="tiktokUrl" /></label>
+    </div>
+  }
+
+  @if (activeTab() === 'theme') {
+    <div class="row" formGroupName="theme">
+      @for (key of ['primary', 'primaryDark', 'accent', 'accentLight', 'background', 'surface', 'text', 'textMuted']; track key) {
+        <label>{{ key }} <input [formControlName]="key" type="color" /></label>
+      }
+      <label class="full">Hero gradient <input formControlName="heroGradient" /></label>
+      <label>Heading font <input formControlName="fontHeading" /></label>
+      <label>Body font <input formControlName="fontBody" /></label>
+      <label>Script font <input formControlName="fontScript" /></label>
+    </div>
+  }
+
+  @if (activeTab() === 'about') {
+    <div formGroupName="about">
+      <div class="row">
+        <label>Section title <input formControlName="title" /></label>
+        <label>Artist name <input formControlName="artistName" /></label>
+        <label>Artist title <input formControlName="artistTitle" /></label>
+        <label class="full">Intro <input formControlName="intro" /></label>
+        <label class="full">Story <textarea formControlName="story"></textarea></label>
+      </div>
+      <h3>Highlights</h3>
+      <div formArrayName="highlights">
+        @for (c of highlights().controls; track $index) {
+          <label>
+            Bullet {{ $index + 1 }}
+            <input [formControlName]="$index" />
+          </label>
+        }
+      </div>
+      <button type="button" class="btn ghost" (click)="addHighlight()">+ Add highlight</button>
+    </div>
+  }
+
+  @if (activeTab() === 'house') {
+    <div formGroupName="houseCalls">
+      <div class="row">
+        <label>Title <input formControlName="title" /></label>
+        <label class="full">Description <textarea formControlName="description"></textarea></label>
+      </div>
+      <h3>Notes</h3>
+      <div formArrayName="notes">
+        @for (c of houseNotes().controls; track $index) {
+          <label>Note {{ $index + 1 }} <input [formControlName]="$index" /></label>
+        }
+      </div>
+      <button type="button" class="btn ghost" (click)="addHouseNote()">+ Add note</button>
+    </div>
+  }
+
+  @if (activeTab() === 'aftercare') {
+    <div formGroupName="aftercare">
+      <div class="row">
+        <label>Title <input formControlName="title" /></label>
+        <label class="full">Intro <textarea formControlName="intro"></textarea></label>
+      </div>
+      <h3>Tips</h3>
+      <div formArrayName="tips">
+        @for (tip of tips().controls; track $index) {
+          <div class="row" [formGroupName]="$index">
+            <label>Tip title <input formControlName="title" /></label>
+            <label class="full">Description <textarea formControlName="description"></textarea></label>
+          </div>
+        }
+      </div>
+      <button type="button" class="btn ghost" (click)="addTip()">+ Add tip</button>
+    </div>
+  }
+
+  @if (activeTab() === 'pricing') {
+    <div class="row" formGroupName="pricingHighlight">
+      <label>Title <input formControlName="title" /></label>
+      <label>Subtitle <input formControlName="subtitle" /></label>
+      <label>From (KES) <input formControlName="priceFrom" type="number" /></label>
+      <label>To (KES) <input formControlName="priceTo" type="number" /></label>
+      <label>Currency <input formControlName="currency" /></label>
+      <label>Badge <input formControlName="badge" /></label>
+      <label class="full">Includes <textarea formControlName="includes"></textarea></label>
+      <label class="full">Studio note <input formControlName="studioNote" /></label>
+    </div>
+  }
+</form>

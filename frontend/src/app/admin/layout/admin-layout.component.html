@@ -1,0 +1,28 @@
+<div class="admin-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="mark">◆</span>
+      <div>
+        <strong>Luna CMS</strong>
+        <small>Content manager</small>
+      </div>
+    </div>
+    <nav>
+      @for (item of nav; track item.path) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+          >{{ item.label }}</a
+        >
+      }
+    </nav>
+    <div class="sidebar-foot">
+      <a routerLink="/" target="_blank">View live site ↗</a>
+      <button type="button" (click)="logout()">Sign out</button>
+    </div>
+  </aside>
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

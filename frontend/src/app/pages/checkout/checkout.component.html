@@ -1,0 +1,144 @@
+<app-page-hero
+  eyebrow="◆ Checkout"
+  title="Complete Your <span class='accent'>Order</span>"
+  subtitle="Pay with M-Pesa STK, offline till/paybill, or finish on WhatsApp"
+/>
+
+@if (vm$ | async; as vm) {
+  <section class="checkout-page">
+    <div class="summary">
+      <app-product-image-viewer
+        [alt]="vm.service.name"
+        [emoji]="vm.service.emoji"
+        [images]="vm.service.images"
+        [view360]="vm.service.view360"
+      />
+      <div class="product-meta">
+        <h2>{{ vm.service.name }}</h2>
+        <p class="meta">{{ vm.service.style }} · {{ vm.service.length }}</p>
+        <p>{{ vm.service.description }}</p>
+        <p class="price">KES {{ vm.service.priceKes | number }} <span>per pair</span></p>
+      </div>
+    </div>
+
+    @if (successMessage()) {
+      <div class="alert success">
+        <h3>Order placed — {{ orderId() }}</h3>
+        <p>{{ successMessage() }}</p>
+        <a routerLink="/pricing" class="btn ghost">Continue shopping</a>
+      </div>
+    } @else {
+      <form class="checkout-form" [formGroup]="form" (ngSubmit)="submit(vm.service.slug)">
+        <fieldset class="details">
+          <legend>Your details</legend>
+          <label>
+            Full name
+            <input formControlName="name" autocomplete="name" />
+          </label>
+          <label>
+            Phone (WhatsApp)
+            <input formControlName="phone" autocomplete="tel" />
+          </label>
+          <label>
+            Email (optional)
+            <input formControlName="email" type="email" autocomplete="email" />
+          </label>
+          <label>
+            Shoe size (EU)
+            <input formControlName="size" placeholder="e.g. 38" />
+          </label>
+          <label>
+            Quantity
+            <input formControlName="quantity" type="number" min="1" />
+          </label>
+          <label class="full">
+            Notes (colour, fit, delivery)
+            <textarea formControlName="notes" rows="3"></textarea>
+          </label>
+        </fieldset>
+
+        <fieldset class="payment">
+          <legend>Payment method</legend>
+          <div class="pay-tabs">
+            <button
+              type="button"
+              [class.active]="paymentMethod() === 'mpesa_stk'"
+              (click)="setPayment('mpesa_stk')"
+            >
+              M-Pesa STK
+              <small>Default · pay on phone</small>
+            </button>
+            <button
+              type="button"
+              [class.active]="paymentMethod() === 'offline_till' || paymentMethod() === 'offline_paybill'"
+              (click)="setOfflineChannel('till')"
+            >
+              Offline
+              <small>Till or Paybill</small>
+            </button>
+            <button
+              type="button"
+              [class.active]="paymentMethod() === 'whatsapp'"
+              (click)="setPayment('whatsapp')"
+            >
+              WhatsApp
+              <small>Order with our team</small>
+            </button>
+          </div>
+
+          @if (paymentMethod() === 'mpesa_stk') {
+            <div class="pay-panel">
+              <p>We will send an STK push to your phone. Enter your M-Pesa PIN to pay <strong>KES {{ total(vm.service.priceKes) | number }}</strong>.</p>
+              <label>
+                M-Pesa phone number
+                <input formControlName="mpesaPhone" placeholder="Defaults to your contact number" />
+              </label>
+            </div>
+          }
+
+          @if (paymentMethod() === 'offline_till' || paymentMethod() === 'offline_paybill') {
+            <div class="pay-panel">
+              <div class="offline-tabs">
+                <button type="button" [class.active]="offlineChannel() === 'till'" (click)="setOfflineChannel('till')">Till number</button>
+                <button type="button" [class.active]="offlineChannel() === 'paybill'" (click)="setOfflineChannel('paybill')">Paybill</button>
+              </div>
+              @if (offlineChannel() === 'till') {
+                <p>Send <strong>KES {{ total(vm.service.priceKes) | number }}</strong> to Till <strong>{{ vm.site.payment?.tillNumber || '—' }}</strong>, then enter your M-Pesa reference below.</p>
+              } @else {
+                <p>
+                  Send <strong>KES {{ total(vm.service.priceKes) | number }}</strong> to Paybill
+                  <strong>{{ vm.site.payment?.paybillNumber || '—' }}</strong>
+                  (Account: <strong>{{ vm.site.payment?.paybillAccount || '—' }}</strong>), then enter your reference.
+                </p>
+              }
+              <label>
+                M-Pesa reference / confirmation code
+                <input formControlName="paymentReference" placeholder="e.g. QHK7X9ABC1" />
+              </label>
+            </div>
+          }
+
+          @if (paymentMethod() === 'whatsapp') {
+            <div class="pay-panel">
+              <p>We will open WhatsApp with your order details pre-filled. Our team will confirm size, stock, and delivery.</p>
+            </div>
+          }
+        </fieldset>
+
+        <div class="total-bar">
+          <div>
+            <span>Order total</span>
+            <strong>KES {{ total(vm.service.priceKes) | number }}</strong>
+          </div>
+          <button type="submit" class="btn primary" [disabled]="submitting()">
+            {{ submitting() ? 'Placing order…' : 'Place order' }}
+          </button>
+        </div>
+
+        @if (errorMessage()) {
+          <p class="alert error">{{ errorMessage() }}</p>
+        }
+      </form>
+    }
+  </section>
+}

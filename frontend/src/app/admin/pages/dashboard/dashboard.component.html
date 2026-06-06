@@ -1,0 +1,57 @@
+<div class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p>Overview of your Luna Collections storefront</p>
+  </div>
+  <a routerLink="/admin/site" class="btn primary">Edit site settings</a>
+</div>
+
+<div class="stats">
+  <a routerLink="/admin/services" class="stat card">
+    <span class="num">{{ counts()['services'] ?? 0 }}</span>
+    <span>Shoe styles</span>
+  </a>
+  <a routerLink="/admin/reviews" class="stat card">
+    <span class="num">{{ counts()['reviews'] ?? 0 }}</span>
+    <span>Reviews</span>
+  </a>
+  <a routerLink="/admin/faq" class="stat card">
+    <span class="num">{{ counts()['faq'] ?? 0 }}</span>
+    <span>FAQ items</span>
+  </a>
+  <a routerLink="/admin/gallery" class="stat card">
+    <span class="num">{{ counts()['gallery'] ?? 0 }}</span>
+    <span>Gallery</span>
+  </a>
+</div>
+
+<section class="card">
+  <h2>Recent order inquiries</h2>
+  @if (bookings().length === 0) {
+    <p class="empty">No inquiries yet.</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Style</th>
+            <th>When</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (b of bookings(); track b.id) {
+            <tr>
+              <td>{{ b.name }}</td>
+              <td>{{ b.phone }}</td>
+              <td>{{ b.serviceSlug || '—' }}</td>
+              <td>{{ b.createdAt | date: 'medium' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <a routerLink="/admin/bookings" class="link">View all inquiries →</a>
+  }
+</section>

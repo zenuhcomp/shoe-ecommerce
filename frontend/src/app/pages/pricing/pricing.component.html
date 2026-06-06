@@ -1,0 +1,27 @@
+<app-page-hero
+  eyebrow="◆ Pricing"
+  title="Honest, <span class='accent'>Transparent</span> Pricing"
+  subtitle="Office-ready footwear with quality assurance and 7-day exchange policy"
+/>
+
+@if (vm$ | async; as vm) {
+  <section class="page-section">
+    <div class="pricing-grid">
+      @for (svc of vm.services; track svc.id) {
+        <article [class.featured]="svc.featured">
+          <app-product-image-viewer
+            [alt]="svc.name"
+            [emoji]="svc.emoji"
+            [images]="svc.images"
+            [view360]="svc.view360"
+          />
+          <h3>{{ svc.name }}</h3>
+          <p class="meta">{{ svc.style }} · {{ svc.length }}</p>
+          <p>{{ svc.description }}</p>
+          <p class="price">KES {{ svc.priceKes | number }}</p>
+          <a [routerLink]="['/checkout']" [queryParams]="{ service: svc.slug }" class="book">Place order</a>
+        </article>
+      }
+    </div>
+  </section>
+}

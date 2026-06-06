@@ -1,0 +1,118 @@
+<div class="page-header">
+  <div>
+    <h1>{{ title() }}</h1>
+    <p>Manage public-facing content</p>
+  </div>
+  @if (type() !== 'bookings') {
+    <button type="button" class="btn primary" (click)="startCreate()">+ Add item</button>
+  }
+</div>
+
+@if (message()) {
+  <p class="alert success">{{ message() }}</p>
+}
+
+<div class="card table-wrap">
+  <table>
+    <thead>
+      <tr>
+        @if (type() === 'features') {
+          <th>Icon</th><th>Title</th><th>Description</th>
+        } @else if (type() === 'press') {
+          <th>Name</th><th>Note</th>
+        } @else if (type() === 'reviews') {
+          <th>Name</th><th>Rating</th><th>Published</th>
+        } @else if (type() === 'faq') {
+          <th>Question</th>
+        } @else if (type() === 'gallery') {
+          <th>Title</th><th>Category</th>
+        } @else if (type() === 'nav') {
+          <th>Label</th><th>Path</th><th>Visible</th>
+        } @else if (type() === 'bookings') {
+          <th>Name</th><th>Phone</th><th>Service</th><th>Date</th>
+        }
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of items(); track row['id']) {
+        <tr>
+          @if (type() === 'features') {
+            <td>{{ row['icon'] }}</td>
+            <td>{{ row['title'] }}</td>
+            <td>{{ row['description'] }}</td>
+          } @else if (type() === 'press') {
+            <td>{{ row['name'] }}</td>
+            <td>{{ row['note'] }}</td>
+          } @else if (type() === 'reviews') {
+            <td>{{ row['name'] }}</td>
+            <td>{{ row['rating'] }}★</td>
+            <td>{{ row['published'] ? 'Yes' : 'No' }}</td>
+          } @else if (type() === 'faq') {
+            <td>{{ row['question'] }}</td>
+          } @else if (type() === 'gallery') {
+            <td>{{ row['title'] }}</td>
+            <td>{{ row['category'] }}</td>
+          } @else if (type() === 'nav') {
+            <td>{{ row['label'] }}</td>
+            <td>{{ row['path'] }}</td>
+            <td>{{ row['visible'] ? 'Yes' : 'No' }}</td>
+          } @else if (type() === 'bookings') {
+            <td>{{ row['name'] }}</td>
+            <td>{{ row['phone'] }}</td>
+            <td>{{ row['serviceSlug'] || '—' }}</td>
+            <td>{{ $any(row['createdAt']) | date: 'short' }}</td>
+          }
+          <td class="actions">
+            @if (type() !== 'bookings') {
+              <button type="button" class="btn ghost" (click)="startEdit(row)">Edit</button>
+            }
+            <button type="button" class="btn danger" (click)="remove(row)">Delete</button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (showForm()) {
+  <div class="card form-panel" [formGroup]="form">
+    <h2>{{ editingId() ? 'Edit' : 'New' }} item</h2>
+  @if (type() === 'features') {
+    <label>Icon <input formControlName="icon" /></label>
+    <label>Title <input formControlName="title" /></label>
+    <label>Description <textarea formControlName="description"></textarea></label>
+  }
+  @if (type() === 'press') {
+    <label>Name <input formControlName="name" /></label>
+    <label>Note <input formControlName="note" /></label>
+  }
+  @if (type() === 'reviews') {
+    <label>Name <input formControlName="name" /></label>
+    <label>Handle <input formControlName="handle" /></label>
+    <label>Initials <input formControlName="initials" /></label>
+    <label>Rating <input formControlName="rating" type="number" min="1" max="5" /></label>
+    <label class="check"><input formControlName="published" type="checkbox" /> Published</label>
+    <label>Quote <textarea formControlName="quote"></textarea></label>
+  }
+  @if (type() === 'faq') {
+    <label>Question <input formControlName="question" /></label>
+    <label>Answer <textarea formControlName="answer"></textarea></label>
+  }
+  @if (type() === 'gallery') {
+    <label>Title <input formControlName="title" /></label>
+    <label>Category <input formControlName="category" /></label>
+    <label>Image URL <input formControlName="imageUrl" /></label>
+    <label>Alt text <input formControlName="alt" /></label>
+  }
+  @if (type() === 'nav') {
+    <label>Label <input formControlName="label" /></label>
+    <label>Path <input formControlName="path" /></label>
+    <label class="check"><input formControlName="visible" type="checkbox" /> Visible</label>
+  }
+    <div class="actions-bar">
+      <button type="button" class="btn primary" (click)="save()">Save</button>
+      <button type="button" class="btn ghost" (click)="cancel()">Cancel</button>
+    </div>
+  </div>
+}

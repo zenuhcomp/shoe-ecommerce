@@ -1,0 +1,34 @@
+.page-hero {
+  padding: calc(var(--site-chrome-height) + clamp(2rem, 6vw, 3rem)) var(--page-gutter)
+    clamp(2rem, 5vw, 3rem);
+  text-align: center;
+  background: var(--hero-gradient);
+  color: #fff;
+  scroll-margin-top: var(--site-chrome-height);
+
+  .eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-accent-light);
+    margin-bottom: 0.75rem;
+  }
+
+  h1 {
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.2;
+
+    :global(.accent) {
+      color: var(--color-accent-light);
+    }
+  }
+
+  .subtitle {
+    margin-top: 0.75rem;
+    max-width: 560px;
+    margin-left: auto;
+    margin-right: auto;
+    opacity: 0.88;
+  }
+}

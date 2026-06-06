@@ -1,0 +1,50 @@
+<header class="site-header" [class.scrolled]="scrolled">
+  <div class="header-inner">
+    <a routerLink="/" class="brand" (click)="closeMenu()">
+      <span class="brand-mark">◆</span>
+      <span class="brand-text">
+        <span class="brand-name">{{ site.brandName }}</span>
+        <span class="brand-script">{{ site.brandScript }}</span>
+      </span>
+    </a>
+
+    <nav class="desktop-nav" aria-label="Main">
+      @for (link of nav; track link.path) {
+        <a
+          [routerLink]="link.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: link.path === '/' }"
+          >{{ link.label }}</a
+        >
+      }
+    </nav>
+
+    <div class="header-actions">
+      <a class="btn-book" [href]="site.whatsAppUrl" target="_blank" rel="noopener">Shop Now</a>
+      <button
+        type="button"
+        class="menu-toggle"
+        [class.active]="menuOpen"
+        (click)="toggleMenu()"
+        aria-label="Toggle menu"
+        [attr.aria-expanded]="menuOpen"
+      >
+        <span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-backdrop" [class.active]="menuOpen" (click)="closeMenu()"></div>
+<aside class="mobile-menu" [class.active]="menuOpen" [attr.aria-hidden]="!menuOpen">
+  <div class="mobile-menu-head">
+    <span>{{ site.brandName }} {{ site.brandScript }}</span>
+    <button type="button" (click)="closeMenu()" aria-label="Close menu">×</button>
+  </div>
+  @for (link of nav; track link.path) {
+    <a [routerLink]="link.path" routerLinkActive="active" (click)="closeMenu()">{{ link.label }}</a>
+  }
+  <a class="mobile-book" [href]="site.whatsAppUrl" target="_blank" rel="noopener" (click)="closeMenu()"
+    >Shop on WhatsApp</a
+  >
+</aside>

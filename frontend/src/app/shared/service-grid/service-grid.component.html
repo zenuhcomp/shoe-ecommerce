@@ -1,0 +1,18 @@
+<div class="service-grid" [class.compact]="compact">
+  @for (svc of services; track svc.id) {
+    <article class="service-card" [class.featured]="svc.featured">
+      @if (svc.images?.[0]; as imageUrl) {
+        <div class="card-image">
+          <img [src]="imageUrl | webpImage:520:68" [alt]="svc.name" loading="lazy" decoding="async" />
+        </div>
+      } @else {
+        <div class="emoji">{{ svc.emoji }}</div>
+      }
+      <h3>{{ svc.name }}</h3>
+      <p class="meta">{{ svc.style }} · {{ svc.length }}</p>
+      <p class="desc">{{ svc.description }}</p>
+      <p class="price">KES {{ svc.priceKes | number }}</p>
+      <a class="book-link" [routerLink]="['/checkout']" [queryParams]="{ service: svc.slug }">Order Now ✓</a>
+    </article>
+  }
+</div>

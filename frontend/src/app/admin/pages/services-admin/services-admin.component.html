@@ -1,0 +1,61 @@
+<div class="page-header">
+  <div>
+    <h1>Shoe collections</h1>
+    <p>Services shown on the homepage and pricing pages</p>
+  </div>
+  <button type="button" class="btn primary" (click)="startCreate()">+ Add style</button>
+</div>
+
+@if (message()) {
+  <p class="alert success">{{ message() }}</p>
+}
+
+<div class="card table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>Name</th>
+        <th>Slug</th>
+        <th>Price</th>
+        <th>Featured</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (s of items(); track s.id) {
+        <tr>
+          <td>{{ s.emoji }}</td>
+          <td>{{ s.name }}</td>
+          <td>{{ s.slug }}</td>
+          <td>KES {{ s.priceKes }}</td>
+          <td>{{ s.featured ? 'Yes' : '—' }}</td>
+          <td class="actions">
+            <button type="button" class="btn ghost" (click)="startEdit(s)">Edit</button>
+            <button type="button" class="btn danger" (click)="remove(s)">Delete</button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (showForm()) {
+  <div class="card form-panel" [formGroup]="form">
+    <h2>{{ editing() ? 'Edit style' : 'New style' }}</h2>
+    <div class="row">
+      <label>Name <input formControlName="name" /></label>
+      <label>Slug <input formControlName="slug" /></label>
+      <label>Emoji <input formControlName="emoji" /></label>
+      <label>Style <input formControlName="style" /></label>
+      <label>Length <input formControlName="length" /></label>
+      <label>Price (KES) <input formControlName="priceKes" type="number" /></label>
+      <label class="check"><input formControlName="featured" type="checkbox" /> Featured</label>
+      <label class="full">Description <textarea formControlName="description"></textarea></label>
+    </div>
+    <div class="actions-bar">
+      <button type="button" class="btn primary" (click)="save()">Save</button>
+      <button type="button" class="btn ghost" (click)="cancel()">Cancel</button>
+    </div>
+  </div>
+}

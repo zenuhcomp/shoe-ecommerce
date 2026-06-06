@@ -1,0 +1,49 @@
+@use '../../shared/admin-page.scss';
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat {
+  text-decoration: none;
+  color: inherit;
+  text-align: center;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  .num {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2d4a3e;
+  }
+
+  span:last-child {
+    font-size: 0.88rem;
+    color: #5c6b64;
+  }
+}
+
+h2 {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  margin: 0 0 1rem;
+}
+
+.empty {
+  color: #5c6b64;
+}
+
+.link {
+  display: inline-block;
+  margin-top: 0.75rem;
+  color: #2d4a3e;
+  font-weight: 600;
+  text-decoration: none;
+}

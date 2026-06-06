@@ -1,0 +1,13 @@
+@use '../../shared/admin-page.scss';
+
+.check {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.actions-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
