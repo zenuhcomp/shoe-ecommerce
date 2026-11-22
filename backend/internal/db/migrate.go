@@ -104,6 +104,44 @@ func (d *DB) migrate(ctx context.Context) error {
 			created_at TIMESTAMP NOT NULL,
 			updated_at TIMESTAMP NOT NULL
 		)`,
+		`CREATE TABLE IF NOT EXISTS sections (
+			id TEXT PRIMARY KEY,
+			type TEXT NOT NULL,
+			enabled INTEGER NOT NULL DEFAULT 1,
+			sort_order INTEGER NOT NULL DEFAULT 0,
+			title TEXT NOT NULL DEFAULT '',
+			subtitle TEXT NOT NULL DEFAULT '',
+			badge TEXT NOT NULL DEFAULT '',
+			content TEXT NOT NULL DEFAULT '',
+			background_type TEXT NOT NULL DEFAULT 'default',
+			background_color TEXT NOT NULL DEFAULT '',
+			background_image TEXT NOT NULL DEFAULT '',
+			background_video TEXT NOT NULL DEFAULT '',
+			overlay_opacity INTEGER NOT NULL DEFAULT 40,
+			animation TEXT NOT NULL DEFAULT 'fade-up',
+			animation_duration TEXT NOT NULL DEFAULT '0.8s',
+			animation_delay TEXT NOT NULL DEFAULT '0.1s',
+			hover_effect TEXT NOT NULL DEFAULT 'lift',
+			primary_cta_text TEXT NOT NULL DEFAULT '',
+			primary_cta_url TEXT NOT NULL DEFAULT '',
+			secondary_cta_text TEXT NOT NULL DEFAULT '',
+			secondary_cta_url TEXT NOT NULL DEFAULT '',
+			extra_data TEXT NOT NULL DEFAULT '{}',
+			created_at TIMESTAMP NOT NULL,
+			updated_at TIMESTAMP NOT NULL
+		)`,
+		`CREATE TABLE IF NOT EXISTS media_assets (
+			id TEXT PRIMARY KEY,
+			name TEXT NOT NULL,
+			category TEXT NOT NULL DEFAULT 'general',
+			media_type TEXT NOT NULL DEFAULT 'image',
+			url TEXT NOT NULL,
+			thumbnail_url TEXT NOT NULL DEFAULT '',
+			alt_text TEXT NOT NULL DEFAULT '',
+			tags TEXT NOT NULL DEFAULT '',
+			created_at TIMESTAMP NOT NULL,
+			updated_at TIMESTAMP NOT NULL
+		)`,
 	}
 
 	for _, stmt := range statements {
@@ -115,6 +153,13 @@ func (d *DB) migrate(ctx context.Context) error {
 	alters := []string{
 		`ALTER TABLE lash_services ADD COLUMN images TEXT NOT NULL DEFAULT '[]'`,
 		`ALTER TABLE lash_services ADD COLUMN view_360 TEXT NOT NULL DEFAULT '[]'`,
+		`ALTER TABLE lash_services ADD COLUMN category TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE lash_services ADD COLUMN badge TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE lash_services ADD COLUMN original_price_kes INTEGER NOT NULL DEFAULT 0`,
+		`ALTER TABLE lash_services ADD COLUMN currency TEXT NOT NULL DEFAULT 'KES'`,
+		`ALTER TABLE lash_services ADD COLUMN specs TEXT NOT NULL DEFAULT '{}'`,
+		`ALTER TABLE lash_services ADD COLUMN video_url TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE lash_services ADD COLUMN in_stock INTEGER NOT NULL DEFAULT 1`,
 		`CREATE TABLE IF NOT EXISTS orders (
 			id TEXT PRIMARY KEY,
 			name TEXT NOT NULL,
@@ -148,8 +193,8 @@ func isIgnorableMigrateErr(err error) bool {
 	if err == nil {
 		return false
 	}
-	msg := err.Error()
-	return containsAny(msg, "duplicate column", "already exists", "Duplicate column")
+	msg := strings.ToLower(err.Error())
+	return containsAny(msg, "duplicate column", "already exists", "column already exists")
 }
 
 func containsAny(s string, parts ...string) bool {

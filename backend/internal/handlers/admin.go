@@ -73,15 +73,26 @@ func (a *AdminAPI) Dashboard(w http.ResponseWriter, r *http.Request) {
 	reviews, _ := a.repo.Reviews(ctx, false)
 	faq, _ := a.repo.FAQ(ctx)
 	gallery, _ := a.repo.Gallery(ctx)
+	sections, _ := a.repo.Sections(ctx, true)
+	media, _ := a.repo.MediaAssets(ctx, "")
 	bookings, _ := a.repo.ListBookings(ctx, 5)
+	orders, _ := a.repo.ListOrders(ctx, 5)
+	features, _ := a.repo.Features(ctx)
+	allBookings, _ := a.repo.ListBookings(ctx, 10000)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"counts": map[string]int{
-			"services": len(services),
-			"reviews":  len(reviews),
-			"faq":      len(faq),
-			"gallery":  len(gallery),
+			"services":  len(services),
+			"reviews":   len(reviews),
+			"faq":       len(faq),
+			"gallery":   len(gallery),
+			"sections":  len(sections),
+			"media":     len(media),
+			"orders":    len(orders),
+			"bookings":  len(allBookings),
+			"features":  len(features),
 		},
 		"recentBookings": bookings,
+		"recentOrders":   orders,
 	})
 }
 
@@ -497,6 +508,160 @@ func (a *AdminAPI) ListBookings(w http.ResponseWriter, r *http.Request) {
 
 func (a *AdminAPI) DeleteBooking(w http.ResponseWriter, r *http.Request) {
 	a.deleteID(w, r, a.repo.DeleteBooking)
+}
+
+// --- Presets ---
+
+func (a *AdminAPI) ListPresets(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, a.repo.ListPresets())
+}
+
+func (a *AdminAPI) ApplyPreset(w http.ResponseWriter, r *http.Request) {
+	var req models.ApplyPresetRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid body")
+		return
+	}
+	presetID := req.PresetID
+	if presetID == "" {
+		presetID = req.PresetIDSnake
+	}
+	if presetID == "" {
+		presetID = req.ID
+	}
+	if presetID == "" {
+		writeError(w, http.StatusBadRequest, "presetId is required")
+		return
+	}
+	if err := a.repo.ApplyPreset(r.Context(), presetID, req.SeedItems); err != nil {
+		log.Printf("apply preset %s: %v", presetID, err)
+		writeError(w, http.StatusInternalServerError, "failed to apply preset")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"success":  true,
+		"presetId": presetID,
+		"message":  "Preset applied successfully",
+	})
+}
+
+// --- Sections ---
+
+func (a *AdminAPI) ListSections(w http.ResponseWriter, r *http.Request) {
+	list, err := a.repo.Sections(r.Context(), true)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load sections")
+		return
+	}
+	writeJSON(w, http.StatusOK, list)
+}
+
+func (a *AdminAPI) CreateSection(w http.ResponseWriter, r *http.Request) {
+	var s models.Section
+	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid body")
+		return
+	}
+	if s.ID == "" {
+		s.ID = "sec-" + uuid.NewString()[:8]
+	}
+	if s.Type == "" {
+		s.Type = "custom_block"
+	}
+	existing, _ := a.repo.Sections(r.Context(), true)
+	if err := a.repo.CreateSection(r.Context(), s, len(existing)); err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to create section")
+		return
+	}
+	writeJSON(w, http.StatusCreated, s)
+}
+
+func (a *AdminAPI) UpdateSection(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	var s models.Section
+	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid body")
+		return
+	}
+	s.ID = id
+	if err := a.repo.UpdateSection(r.Context(), s); err != nil {
+		writeError(w, http.StatusNotFound, "section not found")
+		return
+	}
+	writeJSON(w, http.StatusOK, s)
+}
+
+func (a *AdminAPI) DeleteSection(w http.ResponseWriter, r *http.Request) {
+	a.deleteID(w, r, a.repo.DeleteSection)
+}
+
+func (a *AdminAPI) ReorderSections(w http.ResponseWriter, r *http.Request) {
+	a.reorderIDs(w, r, a.repo.ReorderSections)
+}
+
+// --- Media Assets ---
+
+func (a *AdminAPI) ListMedia(w http.ResponseWriter, r *http.Request) {
+	cat := r.URL.Query().Get("category")
+	list, err := a.repo.MediaAssets(r.Context(), cat)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load media")
+		return
+	}
+	writeJSON(w, http.StatusOK, list)
+}
+
+func (a *AdminAPI) CreateMedia(w http.ResponseWriter, r *http.Request) {
+	var m models.MediaAsset
+	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid body")
+		return
+	}
+	if m.ID == "" {
+		m.ID = "med-" + uuid.NewString()[:8]
+	}
+	if m.Name == "" || m.URL == "" {
+		writeError(w, http.StatusBadRequest, "name and url are required")
+		return
+	}
+	if err := a.repo.CreateMediaAsset(r.Context(), m); err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to save media asset")
+		return
+	}
+	writeJSON(w, http.StatusCreated, m)
+}
+
+func (a *AdminAPI) DeleteMedia(w http.ResponseWriter, r *http.Request) {
+	a.deleteID(w, r, a.repo.DeleteMediaAsset)
+}
+
+// --- Orders ---
+
+func (a *AdminAPI) ListOrders(w http.ResponseWriter, r *http.Request) {
+	list, err := a.repo.ListOrders(r.Context(), 100)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load orders")
+		return
+	}
+	writeJSON(w, http.StatusOK, list)
+}
+
+func (a *AdminAPI) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	var req models.UpdateOrderStatusRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid body")
+		return
+	}
+	if err := a.repo.UpdateOrderStatus(r.Context(), id, req.Status); err != nil {
+		writeError(w, http.StatusNotFound, "order not found")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"id": id, "status": req.Status})
+}
+
+func (a *AdminAPI) DeleteOrder(w http.ResponseWriter, r *http.Request) {
+	a.deleteID(w, r, a.repo.DeleteOrder)
 }
 
 func (a *AdminAPI) deleteID(w http.ResponseWriter, r *http.Request, fn func(context.Context, string) error) {

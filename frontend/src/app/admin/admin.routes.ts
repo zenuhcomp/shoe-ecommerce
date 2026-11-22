@@ -14,6 +14,10 @@ export const adminRoutes: Routes = [
     component: AdminLayoutComponent,
     children: [
       { path: '', loadComponent: () => import('./pages/dashboard/dashboard.component').then((m) => m.DashboardComponent) },
+      { path: 'presets', loadComponent: () => import('./pages/presets-admin/presets-admin.component').then((m) => m.PresetsAdminComponent) },
+      { path: 'sections', loadComponent: () => import('./pages/sections-admin/sections-admin.component').then((m) => m.SectionsAdminComponent) },
+      { path: 'media', loadComponent: () => import('./pages/media-admin/media-admin.component').then((m) => m.MediaAdminComponent) },
+      { path: 'orders', loadComponent: () => import('./pages/orders-admin/orders-admin.component').then((m) => m.OrdersAdminComponent) },
       { path: 'site', loadComponent: () => import('./pages/site-editor/site-editor.component').then((m) => m.SiteEditorComponent) },
       { path: 'services', loadComponent: () => import('./pages/services-admin/services-admin.component').then((m) => m.ServicesAdminComponent) },
       { path: 'features', loadComponent: () => import('./pages/content-list/content-list.component').then((m) => m.ContentListComponent), data: { entity: 'features' } },
@@ -22,7 +26,8 @@ export const adminRoutes: Routes = [
       { path: 'faq', loadComponent: () => import('./pages/content-list/content-list.component').then((m) => m.ContentListComponent), data: { entity: 'faq' } },
       { path: 'gallery', loadComponent: () => import('./pages/content-list/content-list.component').then((m) => m.ContentListComponent), data: { entity: 'gallery' } },
       { path: 'nav', loadComponent: () => import('./pages/content-list/content-list.component').then((m) => m.ContentListComponent), data: { entity: 'nav' } },
-      { path: 'bookings', loadComponent: () => import('./pages/content-list/content-list.component').then((m) => m.ContentListComponent), data: { entity: 'bookings' } },
+      { path: 'bookings', loadComponent: () => import('./pages/orders-admin/orders-admin.component').then((m) => m.OrdersAdminComponent) },
+      { path: 'payments', loadComponent: () => import('./pages/payments-admin/payments-admin.component').then((m) => m.PaymentsAdminComponent) },
     ],
   },
 ];

@@ -19,6 +19,7 @@ import (
 	"github.com/kibsoft/luna-collections/backend/internal/config"
 	"github.com/kibsoft/luna-collections/backend/internal/db"
 	"github.com/kibsoft/luna-collections/backend/internal/handlers"
+	"github.com/kibsoft/luna-collections/backend/internal/payments"
 	"github.com/kibsoft/luna-collections/backend/internal/repository"
 )
 
@@ -42,6 +43,8 @@ func main() {
 
 	public := handlers.NewPublic(repo, cfg.DatabaseMode, database.Driver)
 	admin := handlers.NewAdmin(repo, cfg)
+	paymentManager := payments.NewPaymentManager()
+	paymentsAPI := handlers.NewPaymentsAPI(repo, paymentManager)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -69,8 +72,18 @@ func main() {
 		r.Get("/reviews", public.Reviews)
 		r.Get("/faq", public.FAQ)
 		r.Get("/gallery", public.Gallery)
+		r.Get("/sections", public.Sections)
+		r.Get("/presets", public.Presets)
+		r.Get("/media", public.Media)
 		r.Post("/bookings", public.CreateBooking)
 		r.Post("/orders", public.CreateOrder)
+
+		r.Get("/payments/methods", paymentsAPI.GetActiveMethods)
+		r.Post("/payments/initiate", paymentsAPI.Initiate)
+		r.Post("/payments/verify", paymentsAPI.Verify)
+		r.Get("/payments/order-status", paymentsAPI.GetOrderStatus)
+		r.Post("/payments/mpesa/callback", paymentsAPI.MpesaCallback)
+		r.Post("/payments/mpesa/simulate-callback", paymentsAPI.SimulateCallback)
 	})
 
 	r.Route("/api/admin", func(r chi.Router) {
@@ -80,8 +93,29 @@ func main() {
 			r.Get("/auth/me", admin.Me)
 			r.Get("/dashboard", admin.Dashboard)
 
+			r.Get("/presets", admin.ListPresets)
+			r.Post("/presets/apply", admin.ApplyPreset)
+
+			r.Get("/sections", admin.ListSections)
+			r.Post("/sections", admin.CreateSection)
+			r.Put("/sections/reorder", admin.ReorderSections)
+			r.Put("/sections/{id}", admin.UpdateSection)
+			r.Delete("/sections/{id}", admin.DeleteSection)
+
+			r.Get("/media", admin.ListMedia)
+			r.Post("/media", admin.CreateMedia)
+			r.Delete("/media/{id}", admin.DeleteMedia)
+
+			r.Get("/orders", admin.ListOrders)
+			r.Patch("/orders/{id}/status", admin.UpdateOrderStatus)
+			r.Delete("/orders/{id}", admin.DeleteOrder)
+
 			r.Get("/site", admin.GetSite)
 			r.Put("/site", admin.PutSite)
+
+			r.Get("/payments", paymentsAPI.GetAdminPayments)
+			r.Put("/payments", paymentsAPI.UpdateAdminPayments)
+			r.Post("/payments/simulate-callback", paymentsAPI.SimulateCallback)
 
 			r.Get("/services", admin.ListServices)
 			r.Post("/services", admin.CreateService)

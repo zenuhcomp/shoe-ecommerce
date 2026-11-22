@@ -1,3 +1,4 @@
+import { UpperCasePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AdminApiService } from '../../services/admin-api.service';
@@ -5,7 +6,7 @@ import { AdminApiService } from '../../services/admin-api.service';
 @Component({
   selector: 'app-site-editor',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, UpperCasePipe],
   templateUrl: './site-editor.component.html',
   styleUrl: './site-editor.component.scss',
 })
@@ -18,12 +19,17 @@ export class SiteEditorComponent implements OnInit {
   saving = signal(false);
 
   form = this.fb.group({
+    industry: [''],
     brandName: ['', Validators.required],
     brandScript: [''],
     tagline: [''],
     heroTitle: [''],
     heroSubtitle: [''],
     heroBadge: [''],
+    logoUrl: [''],
+    heroVideoUrl: [''],
+    heroBackgroundType: ['video'],
+    heroOverlayOpacity: [40],
     announcement: [''],
     location: [''],
     studioAddress: [''],
@@ -48,6 +54,13 @@ export class SiteEditorComponent implements OnInit {
       fontHeading: [''],
       fontBody: [''],
       fontScript: [''],
+    }),
+    animations: this.fb.group({
+      globalEnabled: [true],
+      intensity: ['balanced'],
+      scrollReveal: [true],
+      defaultDuration: ['0.8s'],
+      cardHoverEffect: ['lift'],
     }),
     about: this.fb.group({
       title: [''],
@@ -84,14 +97,21 @@ export class SiteEditorComponent implements OnInit {
       this.form.patchValue({
         ...site,
         theme: { ...site.theme },
+        animations: site.animations ? { ...site.animations } : {
+          globalEnabled: true,
+          intensity: 'balanced',
+          scrollReveal: true,
+          defaultDuration: '0.8s',
+          cardHoverEffect: 'lift',
+        },
         about: { ...site.about, highlights: undefined },
         houseCalls: { ...site.houseCalls, notes: undefined },
         aftercare: { title: site.aftercare.title, intro: site.aftercare.intro },
         pricingHighlight: { ...site.pricingHighlight },
       });
-      this.setStringArray('about', 'highlights', site.about.highlights);
-      this.setStringArray('houseCalls', 'notes', site.houseCalls.notes);
-      this.setTips(site.aftercare.tips);
+      this.setStringArray('about', 'highlights', site.about?.highlights || []);
+      this.setStringArray('houseCalls', 'notes', site.houseCalls?.notes || []);
+      this.setTips(site.aftercare?.tips || []);
     });
   }
 

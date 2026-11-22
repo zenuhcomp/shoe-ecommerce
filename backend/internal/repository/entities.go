@@ -51,6 +51,11 @@ func (r *ContentRepo) DeleteFeature(ctx context.Context, id string) error {
 	return r.deleteByID(ctx, "features", id)
 }
 
+func (r *ContentRepo) DeleteAllFeatures(ctx context.Context) error {
+	_, err := r.db.ExecContext(ctx, `DELETE FROM features`)
+	return err
+}
+
 func (r *ContentRepo) ReorderFeatures(ctx context.Context, ids []string) error {
 	return r.reorderStrings(ctx, "features", ids)
 }
@@ -155,6 +160,11 @@ func (r *ContentRepo) DeleteReview(ctx context.Context, id string) error {
 	return r.deleteByID(ctx, "reviews", id)
 }
 
+func (r *ContentRepo) DeleteAllReviews(ctx context.Context) error {
+	_, err := r.db.ExecContext(ctx, `DELETE FROM reviews`)
+	return err
+}
+
 func (r *ContentRepo) ReorderReviews(ctx context.Context, ids []string) error {
 	return r.reorderStrings(ctx, "reviews", ids)
 }
@@ -213,6 +223,11 @@ func (r *ContentRepo) DeleteFAQ(ctx context.Context, id int) error {
 		return fmt.Errorf("not found")
 	}
 	return nil
+}
+
+func (r *ContentRepo) DeleteAllFAQ(ctx context.Context) error {
+	_, err := r.db.ExecContext(ctx, `DELETE FROM faq_items`)
+	return err
 }
 
 func (r *ContentRepo) ReorderFAQ(ctx context.Context, ids []int) error {
@@ -306,6 +321,11 @@ func (r *ContentRepo) BackfillGalleryMedia(ctx context.Context) error {
 
 func (r *ContentRepo) DeleteGallery(ctx context.Context, id string) error {
 	return r.deleteByID(ctx, "gallery_items", id)
+}
+
+func (r *ContentRepo) DeleteAllGallery(ctx context.Context) error {
+	_, err := r.db.ExecContext(ctx, `DELETE FROM gallery_items`)
+	return err
 }
 
 func (r *ContentRepo) ReorderGallery(ctx context.Context, ids []string) error {

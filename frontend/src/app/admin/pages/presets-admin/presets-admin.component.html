@@ -1,0 +1,100 @@
+<div class="admin-page-header">
+  <div>
+    <h2>Industry & Niche Presets</h2>
+    <p class="subtitle">
+      Instantly adapt the entire platform to any e-commerce industry with one click — reconfigures branding,
+      theme colors, typography, sections, animations, catalog items, features, reviews, FAQs, and gallery.
+    </p>
+  </div>
+</div>
+
+@if (message(); as msg) {
+  <div class="alert-box" [class.success]="msg.type === 'success'" [class.error]="msg.type === 'error'">
+    <span>{{ msg.text }}</span>
+    <button type="button" class="dismiss-btn" (click)="message.set(null)">✕</button>
+  </div>
+}
+
+@if (loading()) {
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading industry presets…</p>
+  </div>
+} @else {
+  <div class="presets-grid">
+    @for (preset of presets(); track preset.id) {
+      <div class="preset-card" [class.active-preset]="isCurrent(preset)">
+
+        <!-- Color accent band at top -->
+        <span
+          class="card-color-band"
+          [style.background]="'linear-gradient(90deg,' + (preset.primaryColor || '#1a1f3b') + ',' + (preset.accentColor || '#c9a962') + ')'"
+        ></span>
+
+        <!-- Card header: icon + badges -->
+        <div class="card-top">
+          <div class="card-icon">{{ preset.icon || '◆' }}</div>
+          <div class="badge-stack">
+            <span class="industry-tag">{{ preset.industry | uppercase }}</span>
+            @if (isCurrent(preset)) {
+              <span class="active-badge">Currently Active</span>
+            }
+          </div>
+        </div>
+
+        <!-- Info -->
+        <div class="card-info">
+          <h3>{{ preset.name }}</h3>
+          <p class="tagline" [style.color]="preset.accentColor || '#c9a962'">{{ preset.tagline }}</p>
+          <p class="description">{{ preset.description }}</p>
+
+          <!-- Color palette -->
+          <div class="palette-row">
+            <span class="palette-label">Theme</span>
+            <div class="swatches">
+              <span
+                class="swatch"
+                [style.backgroundColor]="preset.primaryColor"
+                [title]="'Primary: ' + (preset.primaryColor || 'default')"
+              ></span>
+              <span
+                class="swatch"
+                [style.backgroundColor]="preset.accentColor"
+                [title]="'Accent: ' + (preset.accentColor || 'default')"
+              ></span>
+            </div>
+          </div>
+
+          <!-- Sample images -->
+          @if (preset.sampleImages && preset.sampleImages.length > 0) {
+            <div class="sample-images">
+              @for (img of preset.sampleImages.slice(0, 3); track img) {
+                <img [src]="img" alt="Sample Preview" loading="lazy" />
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Action -->
+        <div class="card-actions">
+          <button
+            type="button"
+            class="apply-btn"
+            [disabled]="applyingId() !== null"
+            [style.background]="'linear-gradient(135deg,' + (preset.primaryColor || '#1a1f3b') + ',' + (preset.accentColor || '#c9a962') + ')'"
+            [style.color]="'#fff'"
+            (click)="applyPreset(preset, true)"
+          >
+            @if (applyingId() === preset.id) {
+              <span class="applying-spinner"></span> Applying Preset…
+            } @else if (isCurrent(preset)) {
+              ✓ Active — Re-seed Content
+            } @else {
+              Apply {{ preset.name }} →
+            }
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+}

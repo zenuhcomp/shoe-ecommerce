@@ -39,10 +39,35 @@ VALUES (?, ?, ?, ?, 'admin', ?, ?)`),
 	return models.AdminUser{ID: id, Email: email, DisplayName: displayName, Role: "admin", CreatedAt: ts, UpdatedAt: ts}, nil
 }
 
+func (r *ContentRepo) UpsertAdminUser(ctx context.Context, email, passwordHash, displayName string) (models.AdminUser, error) {
+	ts := nowUTC()
+	var existingID string
+	err := r.db.QueryRowContext(ctx, rebind(r.driver, `SELECT id FROM cms_users WHERE LOWER(email) = LOWER(?)`), email).Scan(&existingID)
+	if err == nil {
+		_, err = r.db.ExecContext(ctx, rebind(r.driver, `
+UPDATE cms_users SET password_hash = ?, display_name = ?, updated_at = ? WHERE id = ?`),
+			passwordHash, displayName, ts, existingID)
+		if err != nil {
+			return models.AdminUser{}, err
+		}
+		return models.AdminUser{ID: existingID, Email: email, DisplayName: displayName, Role: "admin", UpdatedAt: ts}, nil
+	}
+
+	id := uuid.NewString()
+	_, err = r.db.ExecContext(ctx, rebind(r.driver, `
+INSERT INTO cms_users (id, email, password_hash, display_name, role, created_at, updated_at)
+VALUES (?, ?, ?, ?, 'admin', ?, ?)`),
+		id, email, passwordHash, displayName, ts, ts)
+	if err != nil {
+		return models.AdminUser{}, err
+	}
+	return models.AdminUser{ID: id, Email: email, DisplayName: displayName, Role: "admin", CreatedAt: ts, UpdatedAt: ts}, nil
+}
+
 func (r *ContentRepo) UserByEmail(ctx context.Context, email string) (cmsUserRow, error) {
 	var u cmsUserRow
 	q := rebind(r.driver, `
-SELECT id, email, password_hash, display_name, role, created_at, updated_at FROM cms_users WHERE email = ?`)
+SELECT id, email, password_hash, display_name, role, created_at, updated_at FROM cms_users WHERE LOWER(email) = LOWER(?)`)
 	err := r.db.QueryRowContext(ctx, q, email).Scan(
 		&u.ID, &u.Email, &u.PasswordHash, &u.DisplayName, &u.Role, &u.CreatedAt, &u.UpdatedAt,
 	)

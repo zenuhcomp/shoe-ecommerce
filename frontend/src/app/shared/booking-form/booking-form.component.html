@@ -1,39 +1,42 @@
 @if (submitted()) {
-  <p class="success">{{ successMessage() }}</p>
+  <div class="success-banner">
+    <p class="success">{{ successMessage() }}</p>
+    <button type="button" class="btn outline" (click)="submitted.set(false)">Send Another Inquiry</button>
+  </div>
 } @else {
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="booking-form">
     <div class="field">
-      <label for="name">Name *</label>
-      <input id="name" type="text" formControlName="name" />
+      <label for="name">Your Name *</label>
+      <input id="name" type="text" formControlName="name" placeholder="e.g. Jane Mwangi" />
     </div>
     <div class="field">
-      <label for="phone">Phone *</label>
-      <input id="phone" type="tel" formControlName="phone" />
+      <label for="phone">Phone / WhatsApp Number *</label>
+      <input id="phone" type="tel" formControlName="phone" placeholder="e.g. +254 712 345 678" />
     </div>
     <div class="field">
-      <label for="email">Email</label>
-      <input id="email" type="email" formControlName="email" />
+      <label for="email">Email Address</label>
+      <input id="email" type="email" formControlName="email" placeholder="jane@example.com" />
     </div>
     <div class="field">
-      <label for="service">Preferred style</label>
+      <label for="service">Item / Service Selection</label>
       <select id="service" formControlName="serviceSlug">
-        <option value="">Select a shoe style</option>
+        <option value="">Select an item or treatment...</option>
         @for (svc of services; track svc.id) {
-          <option [value]="svc.slug">{{ svc.name }} — KES {{ svc.priceKes }}</option>
+          <option [value]="svc.slug">{{ svc.name }} — {{ svc.currency || 'KES' }} {{ svc.priceKes }}</option>
         }
       </select>
     </div>
     <div class="field">
-      <label for="when">Preferred delivery / pickup</label>
-      <input id="when" type="text" formControlName="preferredAt" placeholder="e.g. Friday pickup or Nairobi delivery" />
+      <label for="when">Preferred Date / Timing / Delivery</label>
+      <input id="when" type="text" formControlName="preferredAt" placeholder="e.g. Saturday afternoon or express delivery" />
     </div>
     <div class="field">
-      <label for="message">Notes</label>
-      <textarea id="message" rows="3" formControlName="message"></textarea>
+      <label for="message">Custom Specifications / Notes</label>
+      <textarea id="message" rows="3" formControlName="message" placeholder="Provide any custom dimensions, color options, skin type, or test drive notes..."></textarea>
     </div>
     @if (errorMessage()) {
       <p class="error">{{ errorMessage() }}</p>
     }
-    <button type="submit" class="submit">Send Order Inquiry</button>
+    <button type="submit" class="submit">Submit Inquiry / Request ✓</button>
   </form>
 }

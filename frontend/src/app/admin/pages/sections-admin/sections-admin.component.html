@@ -1,0 +1,208 @@
+<div class="admin-page-header">
+  <div>
+    <h2>🧩 Dynamic Sections Builder</h2>
+    <p class="subtitle">
+      Absolute control of your storefront sections: reorder, toggle visibility, customize titles, backgrounds (color, gradient, image, video), animations, and call-to-actions.
+    </p>
+  </div>
+  <button type="button" class="btn primary" (click)="startCreate()">+ Add Custom Section</button>
+</div>
+
+@if (message(); as msg) {
+  <div class="alert-box" [class.success]="msg.type === 'success'" [class.error]="msg.type === 'error'">
+    <span>{{ msg.text }}</span>
+    <button type="button" class="dismiss-btn" (click)="message.set(null)">✕</button>
+  </div>
+}
+
+@if (loading()) {
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading sections...</p>
+  </div>
+} @else {
+  <div class="sections-list">
+    @for (sec of sections(); track sec.id; let i = $index) {
+      <div class="section-row" [class.disabled-row]="!sec.enabled">
+        <div class="order-controls">
+          <button type="button" class="arrow-btn" [disabled]="i === 0" (click)="moveUp(i)" title="Move Up">▲</button>
+          <span class="order-num">{{ i + 1 }}</span>
+          <button type="button" class="arrow-btn" [disabled]="i === sections().length - 1" (click)="moveDown(i)" title="Move Down">▼</button>
+        </div>
+
+        <div class="section-meta">
+          <div class="pill-row">
+            <span class="type-pill">{{ sec.type }}</span>
+            <span class="bg-pill">BG: {{ sec.backgroundType }}</span>
+            <span class="anim-pill">Anim: {{ sec.animation }} ({{ sec.animationDuration }})</span>
+          </div>
+          <h4>{{ sec.title || ('(Untitled ' + sec.type + ')') }}</h4>
+          @if (sec.subtitle) {
+            <p class="sub">{{ sec.subtitle }}</p>
+          }
+        </div>
+
+        <div class="section-actions">
+          <label class="toggle-switch" title="Toggle section visibility">
+            <input type="checkbox" [checked]="sec.enabled" (change)="toggleEnabled(sec)" />
+            <span class="slider"></span>
+          </label>
+          <button type="button" class="btn outline edit-btn" (click)="startEdit(sec)">Edit Section ✎</button>
+          <button type="button" class="btn-icon delete-btn" (click)="deleteSection(sec.id)" title="Remove Section">🗑</button>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+<!-- Editor Drawer / Modal -->
+@if (editingSection() || isCreating()) {
+  <div class="editor-modal-backdrop" (click)="cancelEdit()">
+    <div class="editor-modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ isCreating() ? 'Add New Section' : 'Edit Section: ' + editForm.get('type')?.value }}</h3>
+        <button type="button" class="close-btn" (click)="cancelEdit()">✕</button>
+      </div>
+
+      <form [formGroup]="editForm" (ngSubmit)="saveSection()" class="modal-form">
+        <!-- 1. Content & Text -->
+        <fieldset class="form-section">
+          <legend>📝 Text & Headings</legend>
+          <div class="grid-2">
+            <div class="field">
+              <label for="sec-type">Section Type</label>
+              <select id="sec-type" formControlName="type">
+                <option value="hero">Hero (Banner / Splash)</option>
+                <option value="features">Features / Value Props</option>
+                <option value="products">Products / Catalog Grid</option>
+                <option value="video_banner">Cinematic Video Banner</option>
+                <option value="gallery">Gallery / Lookbook</option>
+                <option value="pricing">Pricing / Inclusions</option>
+                <option value="reviews">Customer Reviews</option>
+                <option value="faq">FAQ Accordion</option>
+                <option value="about">About / Story</option>
+                <option value="inquiry">Order / Booking Inquiry Form</option>
+                <option value="cta">Final Call-to-Action</option>
+                <option value="custom_block">Custom Content Block</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="sec-badge">Badge / Eyebrow Text</label>
+              <input id="sec-badge" type="text" formControlName="badge" placeholder="~ Handcrafted Quality ~" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="sec-title">Section Title (supports &lt;span class='accent'&gt;accent&lt;/span&gt;)</label>
+            <input id="sec-title" type="text" formControlName="title" placeholder="e.g. Sculptural Furniture <span class='accent'>Made to Order</span>" />
+          </div>
+
+          <div class="field">
+            <label for="sec-sub">Subtitle / Description</label>
+            <input id="sec-sub" type="text" formControlName="subtitle" placeholder="e.g. Handcrafted timber pieces built to anchor your space" />
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="sec-cta-text">Primary CTA Text</label>
+              <input id="sec-cta-text" type="text" formControlName="primaryCtaText" placeholder="Explore Collections" />
+            </div>
+            <div class="field">
+              <label for="sec-cta-url">Primary CTA Link</label>
+              <input id="sec-cta-url" type="text" formControlName="primaryCtaUrl" placeholder="/collections" />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="sec-cta2-text">Secondary CTA Text</label>
+              <input id="sec-cta2-text" type="text" formControlName="secondaryCtaText" placeholder="WhatsApp Concierge" />
+            </div>
+            <div class="field">
+              <label for="sec-cta2-url">Secondary CTA Link</label>
+              <input id="sec-cta2-url" type="text" formControlName="secondaryCtaUrl" placeholder="https://wa.me/..." />
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 2. Media & Background -->
+        <fieldset class="form-section">
+          <legend>🎬 Background & Media Controls</legend>
+          <div class="grid-2">
+            <div class="field">
+              <label for="sec-bg-type">Background Type</label>
+              <select id="sec-bg-type" formControlName="backgroundType">
+                <option value="default">Default Page Background</option>
+                <option value="color">Solid Color</option>
+                <option value="gradient">Theme Hero Gradient</option>
+                <option value="image">Image Background</option>
+                <option value="video">Direct Video Background (MP4 / WebM)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="sec-bg-color">Solid Color (if Color selected)</label>
+              <input id="sec-bg-color" type="text" formControlName="backgroundColor" placeholder="#181D19 or rgba(0,0,0,0.5)" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="sec-bg-video">Background Video URL (MP4 / WebM)</label>
+            <input id="sec-bg-video" type="text" formControlName="backgroundVideo" placeholder="https://.../video.mp4" />
+          </div>
+
+          <div class="field">
+            <label for="sec-bg-img">Background Image URL</label>
+            <input id="sec-bg-img" type="text" formControlName="backgroundImage" placeholder="https://images.unsplash.com/..." />
+          </div>
+
+          <div class="field">
+            <label for="sec-overlay">Dark Overlay Opacity: {{ editForm.get('overlayOpacity')?.value }}%</label>
+            <input id="sec-overlay" type="range" min="0" max="95" step="5" formControlName="overlayOpacity" />
+          </div>
+        </fieldset>
+
+        <!-- 3. Animations & Motion -->
+        <fieldset class="form-section">
+          <legend>⚡ Animation & Motion Engine</legend>
+          <div class="grid-3">
+            <div class="field">
+              <label for="sec-anim">Entrance Animation</label>
+              <select id="sec-anim" formControlName="animation">
+                <option value="none">None (Static)</option>
+                <option value="fade-in">Fade In</option>
+                <option value="slide-up">Slide Up</option>
+                <option value="slide-left">Slide Left</option>
+                <option value="slide-right">Slide Right</option>
+                <option value="zoom-in">Zoom In</option>
+                <option value="float">Continuous Soft Float</option>
+                <option value="pulse">Continuous Subtle Pulse</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="sec-dur">Duration</label>
+              <input id="sec-dur" type="text" formControlName="animationDuration" placeholder="0.8s" />
+            </div>
+
+            <div class="field">
+              <label for="sec-hover">Card Hover Effect</label>
+              <select id="sec-hover" formControlName="hoverEffect">
+                <option value="lift">Lift & Elevation</option>
+                <option value="scale">Scale Up</option>
+                <option value="glow">Accent Glow</option>
+                <option value="none">None</option>
+              </select>
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="modal-footer">
+          <button type="button" class="btn outline" (click)="cancelEdit()">Cancel</button>
+          <button type="submit" class="btn primary" [disabled]="saving()">
+            {{ saving() ? 'Saving Changes...' : 'Save Section Settings ✓' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

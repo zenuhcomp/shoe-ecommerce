@@ -76,8 +76,13 @@ func defaultSiteConfig() models.SiteConfig {
 			StudioNote: "◆ Westlands showroom · ◆ Sizes 35–42 · ◆ Nationwide delivery",
 		},
 		Payment: models.PaymentConfig{
-			TillNumber: "888420", PaybillNumber: "247247", PaybillAccount: "Luna Collections",
-			MpesaShortCode: "888420",
+			MpesaManualEnabled: false,
+			TillNumber:         "",
+			PaybillNumber:      "",
+			PaybillAccount:     "",
+			MpesaShortCode:     "",
+			CashEnabled:        true,
+			CashInstructions:   "Cash accepted upon showroom collection or white-glove delivery.",
 		},
 	}
 }

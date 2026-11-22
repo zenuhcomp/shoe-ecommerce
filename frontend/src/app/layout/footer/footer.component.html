@@ -18,23 +18,25 @@
     </div>
 
     <div>
-      <h4>Collections</h4>
+      <h4>{{ (site.industry === 'vehicles') ? 'Dealership & Sourcing' : (site.industry === 'furniture') ? 'Atelier & Showroom' : (site.industry === 'spa') ? 'Sanctuary & Treatments' : (site.industry === 'beauty') ? 'Formulations & Skincare' : 'Collections & Styles' }}</h4>
       <nav class="footer-links">
-        <a routerLink="/collections">Court Pumps</a>
-        <a routerLink="/collections">Ladies Oxfords</a>
-        <a routerLink="/collections">Block Heels</a>
-        <a routerLink="/collections">Loafers</a>
-        <a routerLink="/delivery">Delivery</a>
-        <a routerLink="/shoe-care">Shoe Care</a>
+        <a routerLink="/collections">Browse Inventory & Catalog</a>
+        <a routerLink="/pricing">Pricing & Specifications</a>
+        <a [href]="site.whatsAppUrl" target="_blank" rel="noopener">WhatsApp Direct Concierge</a>
+        <a routerLink="/contact">Inquiries & Booking</a>
       </nav>
     </div>
 
     <div>
-      <h4>Get in Touch</h4>
+      <h4>Direct Contact</h4>
       <div class="footer-contact">
-        <a [href]="site.instagramUrl" target="_blank" rel="noopener">Instagram</a>
-        <a [href]="site.tiktokUrl" target="_blank" rel="noopener">TikTok</a>
-        <a [href]="'mailto:' + site.email">Email</a>
+        @if (site.instagramUrl) {
+          <a [href]="site.instagramUrl" target="_blank" rel="noopener">Instagram</a>
+        }
+        @if (site.tiktokUrl) {
+          <a [href]="site.tiktokUrl" target="_blank" rel="noopener">TikTok</a>
+        }
+        <a [href]="'mailto:' + site.email">{{ site.email }}</a>
         <a [href]="telHref(site.phone)">{{ site.phone }}</a>
       </div>
     </div>

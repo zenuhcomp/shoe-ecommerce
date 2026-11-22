@@ -1,0 +1,327 @@
+@use '../../shared/admin-page.scss';
+
+.admin-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  gap: 1.5rem;
+
+  h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.6rem;
+    color: var(--color-primary);
+  }
+
+  .subtitle {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    max-width: 750px;
+  }
+}
+
+.alert-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+
+  &.success {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+  }
+
+  &.error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+
+  .dismiss-btn {
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: inherit;
+  }
+}
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  .category-pills,
+  .type-toggle {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+
+    button {
+      padding: 0.45rem 0.95rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid rgba(26, 31, 59, 0.12);
+      background: var(--color-surface);
+      color: var(--color-text);
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: var(--color-accent);
+      }
+
+      &.active {
+        background: var(--color-primary);
+        color: #ffffff;
+        border-color: var(--color-primary);
+      }
+    }
+  }
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.media-card {
+  background: var(--color-surface);
+  border: 1px solid rgba(26, 31, 59, 0.1);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  .media-preview-container {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    background: #000;
+    overflow: hidden;
+
+    img,
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .type-badge {
+      position: absolute;
+      top: 0.6rem;
+      left: 0.6rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      color: #fff;
+
+      &.video-badge {
+        background: rgba(220, 38, 38, 0.85);
+      }
+
+      &.img-badge {
+        background: rgba(15, 23, 42, 0.75);
+      }
+    }
+  }
+
+  .media-info {
+    padding: 1rem;
+    flex: 1;
+
+    h4 {
+      margin: 0 0 0.4rem 0;
+      font-size: 1rem;
+      line-height: 1.35;
+      color: var(--color-primary);
+    }
+
+    .industry-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: rgba(0, 0, 0, 0.05);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      color: var(--color-accent);
+      margin-bottom: 0.5rem;
+    }
+
+    .tags {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+    }
+  }
+
+  .media-card-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    background: rgba(0, 0, 0, 0.01);
+
+    .copy-btn {
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      background: #ffffff;
+      padding: 0.4rem 0.85rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--color-primary);
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+      }
+
+      &.copied {
+        background: #ecfdf5;
+        border-color: #10b981;
+        color: #065f46;
+      }
+    }
+
+    .del-btn {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      font-size: 1rem;
+      color: #991b1b;
+      opacity: 0.7;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.modal-card {
+  background: var(--color-surface);
+  border-radius: 16px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+    h3 {
+      margin: 0;
+      font-size: 1.3rem;
+    }
+
+    .close-btn {
+      border: 0;
+      background: transparent;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+
+      label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--color-text-muted);
+      }
+
+      input,
+      select {
+        padding: 0.65rem 0.85rem;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        border-radius: 6px;
+        font-size: 0.9rem;
+      }
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+    }
+  }
+}
+
+.loading-state {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--color-text-muted);
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1rem;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

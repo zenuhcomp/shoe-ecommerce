@@ -1,6 +1,7 @@
 .site-footer {
-  background: var(--color-text);
-  color: rgba(255, 255, 255, 0.88);
+  background: var(--color-surface, #121820);
+  border-top: 1px solid color-mix(in srgb, var(--color-text, #ffffff) 12%, transparent);
+  color: var(--color-text, #ffffff);
   padding: clamp(2.5rem, 8vw, 3.5rem) var(--page-gutter) 2rem;
   margin-top: clamp(2rem, 6vw, 4rem);
 }
@@ -25,6 +26,7 @@
   font-family: var(--font-heading);
   font-size: clamp(1.1rem, 3vw, 1.25rem);
   margin-bottom: 0.75rem;
+  color: var(--color-text);
 
   em {
     font-family: var(--font-script);
@@ -40,13 +42,14 @@
 .tagline {
   font-size: 0.9rem;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--color-text-muted);
 }
 
 h4 {
   font-family: var(--font-heading);
   margin-bottom: 0.75rem;
-  color: var(--color-accent-light);
+  color: var(--color-accent);
+  font-size: 1.05rem;
 }
 
 .footer-links,
@@ -56,12 +59,13 @@ h4 {
   gap: 0.45rem;
 
   a {
-    color: rgba(255, 255, 255, 0.75);
+    color: var(--color-text-muted);
     text-decoration: none;
     font-size: 0.9rem;
     min-height: 32px;
     display: inline-flex;
     align-items: center;
+    transition: color 0.2s ease;
 
     &:hover {
       color: var(--color-accent);
@@ -70,10 +74,11 @@ h4 {
 }
 
 .copyright {
-  text-align: center;
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.5);
   max-width: var(--content-max);
-  margin: 0 auto;
-  padding: 0 0.5rem;
+  margin: 2rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-text, #ffffff) 10%, transparent);
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  text-align: center;
 }

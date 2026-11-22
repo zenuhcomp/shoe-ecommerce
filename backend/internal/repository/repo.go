@@ -25,10 +25,22 @@ func (r *ContentRepo) SeedIfEmpty(ctx context.Context) error {
 	if err := r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM site_config`).Scan(&n); err != nil {
 		return err
 	}
-	if n > 0 {
-		return nil
+	if n == 0 {
+		if err := r.seedAll(ctx); err != nil {
+			return err
+		}
 	}
-	return r.seedAll(ctx)
+
+	// Check sections
+	var sectionCount int
+	if err := r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM sections`).Scan(&sectionCount); err == nil && sectionCount == 0 {
+		_ = r.applyFootwearPreset(ctx, false)
+	}
+
+	// Check media
+	_ = r.SeedDefaultMediaIfEmpty(ctx)
+
+	return nil
 }
 
 func (r *ContentRepo) seedAll(ctx context.Context) error {
@@ -37,6 +49,15 @@ func (r *ContentRepo) seedAll(ctx context.Context) error {
 	}
 	for i, s := range defaultServices() {
 		svc := s
+		svc.Category = s.Style
+		svc.Badge = "Official Wear"
+		svc.Currency = "KES"
+		svc.InStock = true
+		svc.Specs = map[string]string{
+			"Material":    "Full-Grain Leather",
+			"Heel Height": s.Length,
+			"Occasion":    "Boardroom & Office",
+		}
 		if err := r.CreateService(ctx, svc, i); err != nil {
 			return err
 		}
@@ -103,9 +124,20 @@ func (r *ContentRepo) Home(ctx context.Context) (models.HomePage, error) {
 	if err != nil {
 		return models.HomePage{}, err
 	}
+	sections, err := r.Sections(ctx, false)
+	if err != nil {
+		sections = []models.Section{}
+	}
+
 	return models.HomePage{
-		Site: site, Services: services, Features: features,
-		Press: press, Reviews: reviews, FAQ: faq, Nav: nav,
+		Site:     site,
+		Services: services,
+		Features: features,
+		Press:    press,
+		Reviews:  reviews,
+		FAQ:      faq,
+		Nav:      nav,
+		Sections: sections,
 	}, nil
 }
 

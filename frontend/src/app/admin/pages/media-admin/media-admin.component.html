@@ -1,0 +1,137 @@
+<div class="admin-page-header">
+  <div>
+    <h2>🖼️ Media & Video Asset Hub</h2>
+    <p class="subtitle">
+      Manage high-resolution imagery, video backgrounds, and 360-degree assets. Click "Copy URL" to quickly insert media into any section or product.
+    </p>
+  </div>
+  <button type="button" class="btn primary" (click)="startAdd()">+ Add Media Asset</button>
+</div>
+
+@if (message(); as msg) {
+  <div class="alert-box" [class.success]="msg.type === 'success'" [class.error]="msg.type === 'error'">
+    <span>{{ msg.text }}</span>
+    <button type="button" class="dismiss-btn" (click)="message.set(null)">✕</button>
+  </div>
+}
+
+<div class="filter-bar">
+  <div class="category-pills">
+    <button type="button" [class.active]="activeCategory() === 'all'" (click)="setCategory('all')">All Industries</button>
+    <button type="button" [class.active]="activeCategory() === 'furniture'" (click)="setCategory('furniture')">🛋️ Furniture</button>
+    <button type="button" [class.active]="activeCategory() === 'vehicles'" (click)="setCategory('vehicles')">🏎️ Vehicles</button>
+    <button type="button" [class.active]="activeCategory() === 'spa'" (click)="setCategory('spa')">🌿 Spa & Wellness</button>
+    <button type="button" [class.active]="activeCategory() === 'beauty'" (click)="setCategory('beauty')">✨ Beauty</button>
+    <button type="button" [class.active]="activeCategory() === 'footwear'" (click)="setCategory('footwear')">👠 Footwear</button>
+  </div>
+
+  <div class="type-toggle">
+    <button type="button" [class.active]="activeType() === 'all'" (click)="setTypeFilter('all')">All Types</button>
+    <button type="button" [class.active]="activeType() === 'image'" (click)="setTypeFilter('image')">📷 Images</button>
+    <button type="button" [class.active]="activeType() === 'video'" (click)="setTypeFilter('video')">▶ Videos</button>
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading media assets...</p>
+  </div>
+} @else {
+  <div class="media-grid">
+    @for (m of filteredMedia(); track m.id) {
+      <div class="media-card">
+        <div class="media-preview-container">
+          @if (m.mediaType === 'video') {
+            <video [src]="m.url" controls playsinline preload="metadata"></video>
+            <span class="type-badge video-badge">▶ Video</span>
+          } @else {
+            <img [src]="m.url" [alt]="m.altText || m.name" loading="lazy" />
+            <span class="type-badge img-badge">📷 Photo</span>
+          }
+        </div>
+
+        <div class="media-info">
+          <h4>{{ m.name }}</h4>
+          <span class="industry-tag">{{ m.category }}</span>
+          @if (m.tags) {
+            <p class="tags">{{ m.tags }}</p>
+          }
+        </div>
+
+        <div class="media-card-actions">
+          <button
+            type="button"
+            class="copy-btn"
+            [class.copied]="copiedId() === m.id"
+            (click)="copyUrl(m)"
+          >
+            {{ copiedId() === m.id ? '✓ Copied URL!' : '📋 Copy URL' }}
+          </button>
+          <button type="button" class="del-btn" (click)="deleteMedia(m.id)" title="Remove">🗑</button>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+<!-- Add Media Modal -->
+@if (isAdding()) {
+  <div class="modal-backdrop" (click)="cancelAdd()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Add New Media Asset</h3>
+        <button type="button" class="close-btn" (click)="cancelAdd()">✕</button>
+      </div>
+
+      <form [formGroup]="addForm" (ngSubmit)="saveMedia()" class="modal-body">
+        <div class="field">
+          <label for="med-name">Asset Title *</label>
+          <input id="med-name" type="text" formControlName="name" placeholder="e.g. Velvet Sofa In Modern Living Room" />
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="med-cat">Industry Category</label>
+            <select id="med-cat" formControlName="category">
+              <option value="furniture">🛋️ Furniture</option>
+              <option value="vehicles">🏎️ Motor Vehicles</option>
+              <option value="spa">🌿 Spa & Wellness</option>
+              <option value="beauty">✨ Beauty & Cosmetics</option>
+              <option value="footwear">👠 Footwear & Fashion</option>
+              <option value="general">🌐 General</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="med-type">Media Type</label>
+            <select id="med-type" formControlName="mediaType">
+              <option value="image">Image (JPEG, PNG, WebP)</option>
+              <option value="video">Video (MP4, WebM)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="med-url">Direct Media URL *</label>
+          <input id="med-url" type="text" formControlName="url" placeholder="https://..." />
+        </div>
+
+        <div class="field">
+          <label for="med-alt">Alt Text / Description</label>
+          <input id="med-alt" type="text" formControlName="altText" placeholder="Descriptive text for accessibility" />
+        </div>
+
+        <div class="field">
+          <label for="med-tags">Keywords / Tags (comma separated)</label>
+          <input id="med-tags" type="text" formControlName="tags" placeholder="sofa, living room, modern, walnut" />
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn outline" (click)="cancelAdd()">Cancel</button>
+          <button type="submit" class="btn primary" [disabled]="addForm.invalid">Add Asset to Library ✓</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

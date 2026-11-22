@@ -1,9 +1,9 @@
 <div class="page-header">
   <div>
-    <h1>Shoe collections</h1>
-    <p>Services shown on the homepage and pricing pages</p>
+    <h1>📦 Products & Catalog Manager</h1>
+    <p>Manage items, prices, specifications, 360° views, and walkaround videos for any e-commerce industry</p>
   </div>
-  <button type="button" class="btn primary" (click)="startCreate()">+ Add style</button>
+  <button type="button" class="btn primary" (click)="startCreate()">+ Add New Item</button>
 </div>
 
 @if (message()) {
@@ -14,25 +14,61 @@
   <table>
     <thead>
       <tr>
-        <th></th>
+        <th>Image</th>
         <th>Name</th>
-        <th>Slug</th>
+        <th>Category</th>
+        <th>Badge</th>
         <th>Price</th>
-        <th>Featured</th>
-        <th></th>
+        <th>Specs</th>
+        <th>Status</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
       @for (s of items(); track s.id) {
         <tr>
-          <td>{{ s.emoji }}</td>
-          <td>{{ s.name }}</td>
-          <td>{{ s.slug }}</td>
-          <td>KES {{ s.priceKes }}</td>
-          <td>{{ s.featured ? 'Yes' : '—' }}</td>
+          <td class="thumb-cell">
+            @if (s.images?.[0]; as img) {
+              <img [src]="img" [alt]="s.name" class="table-thumb" />
+            } @else {
+              <span class="table-emoji">{{ s.emoji || '✨' }}</span>
+            }
+          </td>
+          <td>
+            <strong>{{ s.name }}</strong>
+            <div class="slug-meta">{{ s.slug }}</div>
+          </td>
+          <td>
+            <span class="category-pill">{{ s.category || s.style || 'General' }}</span>
+          </td>
+          <td>
+            @if (s.badge) {
+              <span class="badge-pill">{{ s.badge }}</span>
+            } @else {
+              <span class="muted-dash">—</span>
+            }
+          </td>
+          <td>
+            <strong class="price-val">{{ s.currency || 'KES' }} {{ s.priceKes | number }}</strong>
+            @if (s.originalPriceKes && s.originalPriceKes > s.priceKes) {
+              <div class="orig-price">{{ s.currency || 'KES' }} {{ s.originalPriceKes | number }}</div>
+            }
+          </td>
+          <td>
+            @if (s.specs && (s.specs | keyvalue)?.length) {
+              <span class="specs-pill">{{ (s.specs | keyvalue)?.length }} specs</span>
+            } @else {
+              <span class="muted-dash">—</span>
+            }
+          </td>
+          <td>
+            <span class="status-indicator" [class.in-stock]="s.inStock !== false" [class.out-of-stock]="s.inStock === false">
+              {{ s.inStock !== false ? '● In Stock' : '● Made to Order' }}
+            </span>
+          </td>
           <td class="actions">
-            <button type="button" class="btn ghost" (click)="startEdit(s)">Edit</button>
-            <button type="button" class="btn danger" (click)="remove(s)">Delete</button>
+            <button type="button" class="btn ghost" (click)="startEdit(s)">Edit ✎</button>
+            <button type="button" class="btn danger" (click)="remove(s)">Delete 🗑</button>
           </td>
         </tr>
       }
@@ -41,21 +77,97 @@
 </div>
 
 @if (showForm()) {
-  <div class="card form-panel" [formGroup]="form">
-    <h2>{{ editing() ? 'Edit style' : 'New style' }}</h2>
-    <div class="row">
-      <label>Name <input formControlName="name" /></label>
-      <label>Slug <input formControlName="slug" /></label>
-      <label>Emoji <input formControlName="emoji" /></label>
-      <label>Style <input formControlName="style" /></label>
-      <label>Length <input formControlName="length" /></label>
-      <label>Price (KES) <input formControlName="priceKes" type="number" /></label>
-      <label class="check"><input formControlName="featured" type="checkbox" /> Featured</label>
-      <label class="full">Description <textarea formControlName="description"></textarea></label>
-    </div>
-    <div class="actions-bar">
-      <button type="button" class="btn primary" (click)="save()">Save</button>
-      <button type="button" class="btn ghost" (click)="cancel()">Cancel</button>
+  <div class="modal-backdrop" (click)="cancel()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editing() ? 'Edit Product: ' + editing()?.name : 'Create New Product' }}</h2>
+        <button type="button" class="close-btn" (click)="cancel()">✕</button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="save()" class="form-body">
+        <fieldset class="form-fieldset">
+          <legend>Basic Product Details</legend>
+          <div class="grid-2">
+            <label>Product Name * <input formControlName="name" placeholder="e.g. Oslo Sculptural Sofa" /></label>
+            <label>URL Slug <input formControlName="slug" placeholder="e.g. oslo-sculptural-sofa" /></label>
+          </div>
+
+          <div class="grid-3">
+            <label>Category <input formControlName="category" placeholder="e.g. Living Room / SUVs / Serums" /></label>
+            <label>Badge Pill <input formControlName="badge" placeholder="e.g. Best Seller / Low Mileage" /></label>
+            <label>Emoji Icon <input formControlName="emoji" placeholder="🛋️ or 🏎️ or ✨" /></label>
+          </div>
+
+          <div class="grid-3">
+            <label>Price * <input formControlName="priceKes" type="number" /></label>
+            <label>Original / Sale Price <input formControlName="originalPriceKes" type="number" /></label>
+            <label>Currency <input formControlName="currency" placeholder="KES, USD, EUR" /></label>
+          </div>
+
+          <div class="checkbox-row">
+            <label class="check"><input formControlName="featured" type="checkbox" /> Featured on Homepage</label>
+            <label class="check"><input formControlName="inStock" type="checkbox" /> In Stock & Ready</label>
+          </div>
+
+          <label class="full">Description <textarea rows="3" formControlName="description" placeholder="Rich overview of materials, performance, or benefits..."></textarea></label>
+        </fieldset>
+
+        <!-- Dynamic Specs Manager -->
+        <fieldset class="form-fieldset">
+          <div class="fieldset-header">
+            <legend>Dynamic Industry Specifications (Key-Value)</legend>
+            <button type="button" class="btn-sm" (click)="addSpec()">+ Add Specification</button>
+          </div>
+          <p class="fieldset-tip">Add custom attributes matching your niche (e.g., Year, Mileage, Engine for cars; Material, Dimensions for furniture; Duration, Therapist for spa; Skin Type, Volume for beauty).</p>
+
+          <div class="specs-editor-list">
+            @for (spec of specsList(); track $index; let i = $index) {
+              <div class="spec-editor-row">
+                <input
+                  type="text"
+                  class="spec-key"
+                  [value]="spec.key"
+                  (input)="updateSpecKey(i, $any($event.target).value)"
+                  placeholder="Attribute (e.g. Material)"
+                />
+                <input
+                  type="text"
+                  class="spec-val"
+                  [value]="spec.value"
+                  (input)="updateSpecValue(i, $any($event.target).value)"
+                  placeholder="Value (e.g. Solid Teak & Bouclé)"
+                />
+                <button type="button" class="del-spec-btn" (click)="removeSpec(i)" title="Remove Attribute">✕</button>
+              </div>
+            }
+          </div>
+        </fieldset>
+
+        <!-- Media & 360 Video -->
+        <fieldset class="form-fieldset">
+          <legend>Images, 360° Frames & Video Walkaround</legend>
+
+          <label class="full">
+            Image URLs (one URL per line)
+            <textarea rows="3" formControlName="imagesText" placeholder="https://images.unsplash.com/photo-1...&#10;https://images.unsplash.com/photo-2..."></textarea>
+          </label>
+
+          <label class="full">
+            360° Rotation Frame URLs (one URL per line)
+            <textarea rows="3" formControlName="view360Text" placeholder="https://.../frame-1.jpg&#10;https://.../frame-2.jpg"></textarea>
+          </label>
+
+          <label class="full">
+            Walkaround / Showcase Video URL (MP4 / WebM)
+            <input formControlName="videoUrl" placeholder="https://commondatastorage.googleapis.com/.../video.mp4" />
+          </label>
+        </fieldset>
+
+        <div class="actions-bar">
+          <button type="button" class="btn ghost" (click)="cancel()">Cancel</button>
+          <button type="submit" class="btn primary" [disabled]="form.invalid">Save Product ✓</button>
+        </div>
+      </form>
     </div>
   </div>
 }

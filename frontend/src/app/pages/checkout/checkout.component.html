@@ -1,11 +1,12 @@
 <app-page-hero
   eyebrow="◆ Checkout"
   title="Complete Your <span class='accent'>Order</span>"
-  subtitle="Pay with M-Pesa STK, offline till/paybill, or finish on WhatsApp"
+  subtitle="Choose your preferred payment method and place your order securely"
 />
 
 @if (vm$ | async; as vm) {
   <section class="checkout-page">
+    <!-- Product Summary -->
     <div class="summary">
       <app-product-image-viewer
         [alt]="vm.service.name"
@@ -14,130 +15,261 @@
         [view360]="vm.service.view360"
       />
       <div class="product-meta">
+        @if (vm.service.badge) {
+          <span class="meta-badge">{{ vm.service.badge }}</span>
+        }
         <h2>{{ vm.service.name }}</h2>
         <p class="meta">{{ vm.service.style }} · {{ vm.service.length }}</p>
-        <p>{{ vm.service.description }}</p>
-        <p class="price">KES {{ vm.service.priceKes | number }} <span>per pair</span></p>
+        <p class="desc">{{ vm.service.description }}</p>
+        <p class="price">
+          {{ vm.service.currency || 'KES' }} {{ vm.service.priceKes | number }}
+          @if (vm.service.originalPriceKes && vm.service.originalPriceKes > vm.service.priceKes) {
+            <span class="was">was {{ vm.service.currency || 'KES' }} {{ vm.service.originalPriceKes | number }}</span>
+          }
+        </p>
       </div>
+      @if (vm.service.specs && $any(vm.service.specs) | keyvalue; as specs) {
+        @if (specs.length > 0) {
+          <div class="spec-table">
+            @for (spec of specs; track spec.key) {
+              <div class="spec-row">
+                <span class="spec-key">{{ spec.key }}</span>
+                <span class="spec-val">{{ spec.value }}</span>
+              </div>
+            }
+          </div>
+        }
+      }
     </div>
 
-    @if (successMessage()) {
-      <div class="alert success">
-        <h3>Order placed — {{ orderId() }}</h3>
+    <!-- Order Form -->
+    @if (successMessage() && !paymentPending()) {
+      <div class="result-card success">
+        <div class="result-icon">✓</div>
+        <h3>Order Confirmed</h3>
+        <p class="order-ref">Reference: <strong>{{ orderId() }}</strong></p>
         <p>{{ successMessage() }}</p>
-        <a routerLink="/pricing" class="btn ghost">Continue shopping</a>
+        <a routerLink="/pricing" class="btn-ghost">Continue Shopping</a>
       </div>
     } @else {
-      <form class="checkout-form" [formGroup]="form" (ngSubmit)="submit(vm.service.slug)">
-        <fieldset class="details">
-          <legend>Your details</legend>
-          <label>
-            Full name
-            <input formControlName="name" autocomplete="name" />
-          </label>
-          <label>
-            Phone (WhatsApp)
-            <input formControlName="phone" autocomplete="tel" />
-          </label>
-          <label>
-            Email (optional)
-            <input formControlName="email" type="email" autocomplete="email" />
-          </label>
-          <label>
-            Shoe size (EU)
-            <input formControlName="size" placeholder="e.g. 38" />
-          </label>
-          <label>
-            Quantity
-            <input formControlName="quantity" type="number" min="1" />
-          </label>
-          <label class="full">
-            Notes (colour, fit, delivery)
-            <textarea formControlName="notes" rows="3"></textarea>
-          </label>
-        </fieldset>
+      <form class="checkout-form" [formGroup]="form" (ngSubmit)="submit(vm.service.slug, total(vm.service.priceKes))">
 
-        <fieldset class="payment">
-          <legend>Payment method</legend>
-          <div class="pay-tabs">
-            <button
-              type="button"
-              [class.active]="paymentMethod() === 'mpesa_stk'"
-              (click)="setPayment('mpesa_stk')"
-            >
-              M-Pesa STK
-              <small>Default · pay on phone</small>
-            </button>
-            <button
-              type="button"
-              [class.active]="paymentMethod() === 'offline_till' || paymentMethod() === 'offline_paybill'"
-              (click)="setOfflineChannel('till')"
-            >
-              Offline
-              <small>Till or Paybill</small>
-            </button>
-            <button
-              type="button"
-              [class.active]="paymentMethod() === 'whatsapp'"
-              (click)="setPayment('whatsapp')"
-            >
-              WhatsApp
-              <small>Order with our team</small>
-            </button>
+        <!-- Customer Details -->
+        <fieldset>
+          <legend>Your Details</legend>
+          <div class="fields-grid">
+            <label class="field-label">
+              Full Name <span class="req">*</span>
+              <input formControlName="name" autocomplete="name" placeholder="e.g. Amani Waweru" />
+            </label>
+            <label class="field-label">
+              Phone (WhatsApp) <span class="req">*</span>
+              <input formControlName="phone" autocomplete="tel" placeholder="e.g. 0712 345 678" />
+            </label>
+            <label class="field-label">
+              Email (optional)
+              <input formControlName="email" type="email" autocomplete="email" placeholder="amani@example.com" />
+            </label>
+            <label class="field-label">
+              Option / Size / Spec <span class="req">*</span>
+              <input formControlName="size" placeholder="e.g. Size 38 · Obsidian Black · EU 40" />
+            </label>
+            <label class="field-label qty">
+              Quantity
+              <input formControlName="quantity" type="number" min="1" />
+            </label>
+            <label class="field-label full">
+              Notes (colour, fit, delivery)
+              <textarea formControlName="notes" rows="2" placeholder="Delivery instructions, preferred appointment time, etc."></textarea>
+            </label>
           </div>
+        </fieldset>
 
-          @if (paymentMethod() === 'mpesa_stk') {
-            <div class="pay-panel">
-              <p>We will send an STK push to your phone. Enter your M-Pesa PIN to pay <strong>KES {{ total(vm.service.priceKes) | number }}</strong>.</p>
-              <label>
-                M-Pesa phone number
-                <input formControlName="mpesaPhone" placeholder="Defaults to your contact number" />
-              </label>
+        <!-- Payment Methods (Dynamic Strategy API) -->
+        <fieldset class="payment-fieldset">
+          <legend>Payment Method</legend>
+
+          @if (paymentMethods().length === 0) {
+            <div class="no-methods">
+              <span>⚠️</span>
+              <p>No payment methods are currently enabled. Please contact us via WhatsApp to complete your order.</p>
             </div>
-          }
-
-          @if (paymentMethod() === 'offline_till' || paymentMethod() === 'offline_paybill') {
-            <div class="pay-panel">
-              <div class="offline-tabs">
-                <button type="button" [class.active]="offlineChannel() === 'till'" (click)="setOfflineChannel('till')">Till number</button>
-                <button type="button" [class.active]="offlineChannel() === 'paybill'" (click)="setOfflineChannel('paybill')">Paybill</button>
-              </div>
-              @if (offlineChannel() === 'till') {
-                <p>Send <strong>KES {{ total(vm.service.priceKes) | number }}</strong> to Till <strong>{{ vm.site.payment?.tillNumber || '—' }}</strong>, then enter your M-Pesa reference below.</p>
-              } @else {
-                <p>
-                  Send <strong>KES {{ total(vm.service.priceKes) | number }}</strong> to Paybill
-                  <strong>{{ vm.site.payment?.paybillNumber || '—' }}</strong>
-                  (Account: <strong>{{ vm.site.payment?.paybillAccount || '—' }}</strong>), then enter your reference.
-                </p>
+          } @else {
+            <div class="method-tabs">
+              @for (method of paymentMethods(); track method.id) {
+                <button
+                  type="button"
+                  class="method-tab"
+                  [class.active]="selectedMethodId() === method.id"
+                  (click)="selectMethod(method.id)"
+                >
+                  <span class="method-tab-icon">{{ methodIcon(method.type) }}</span>
+                  <span class="method-tab-name">{{ method.name }}</span>
+                </button>
               }
-              <label>
-                M-Pesa reference / confirmation code
-                <input formControlName="paymentReference" placeholder="e.g. QHK7X9ABC1" />
-              </label>
             </div>
-          }
 
-          @if (paymentMethod() === 'whatsapp') {
-            <div class="pay-panel">
-              <p>We will open WhatsApp with your order details pre-filled. Our team will confirm size, stock, and delivery.</p>
-            </div>
+            @if (selectedMethod; as method) {
+              <div class="pay-panel" [class]="'panel-' + method.type">
+                <p class="method-desc">{{ method.description }}</p>
+
+                <!-- M-Pesa STK Push -->
+                @if (method.id === 'mpesa_express') {
+                  @if (paymentPending()) {
+                    <div class="stk-waiting">
+                      <div class="stk-pulse"></div>
+                      <h4>Waiting for M-Pesa PIN…</h4>
+                      <p>{{ successMessage() }}</p>
+                      <p class="stk-hint">Didn't receive the prompt? Enter your M-Pesa confirmation code below after paying manually.</p>
+                      <label class="field-label mt">
+                        M-Pesa Confirmation Code
+                        <input [value]="verifyReference()" (input)="verifyReference.set($any($event.target).value)" placeholder="e.g. QHK7X9ABC1" />
+                      </label>
+                      <button type="button" class="btn-verify" (click)="verifyPayment()" [disabled]="submitting()">
+                        {{ submitting() ? '⟳ Verifying…' : 'Verify Payment' }}
+                      </button>
+                      <button type="button" class="btn-simulate" (click)="simulateMpesaSuccess(total(vm.service.priceKes))" [disabled]="submitting()">
+                        ⚡ Simulate M-Pesa PIN & Callback Reconciliation
+                      </button>
+                    </div>
+                  } @else {
+                    <div class="env-badge">
+                      🟢 Safaricom Daraja STK Push (Live Production)
+                    </div>
+                    <label class="field-label">
+                      M-Pesa Phone Number
+                      <input formControlName="mpesaPhone" placeholder="Defaults to your contact number above" />
+                    </label>
+                    <p class="pay-note">We will send a Lipa Na M-Pesa STK Push to this number. Enter your PIN to pay <strong>KES {{ total(vm.service.priceKes) | number }}</strong>.</p>
+                  }
+                }
+
+                <!-- M-Pesa Offline (Till / Paybill) -->
+                @if (method.id === 'mpesa_manual') {
+                  <div class="offline-tabs">
+                    <button type="button" [class.active]="offlineChannel() === 'till'" (click)="setOfflineChannel('till')">Buy Goods (Till)</button>
+                    <button type="button" [class.active]="offlineChannel() === 'paybill'" (click)="setOfflineChannel('paybill')">Paybill</button>
+                  </div>
+                  @if (offlineChannel() === 'till') {
+                    <div class="pay-info-box">
+                      <span class="pay-info-label">Till Number</span>
+                      <span class="pay-info-value">{{ method.publicParams?.['tillNumber'] || '—' }}</span>
+                    </div>
+                  } @else {
+                    <div class="pay-info-grid">
+                      <div class="pay-info-box">
+                        <span class="pay-info-label">Paybill</span>
+                        <span class="pay-info-value">{{ method.publicParams?.['paybillNumber'] || '—' }}</span>
+                      </div>
+                      <div class="pay-info-box">
+                        <span class="pay-info-label">Account</span>
+                        <span class="pay-info-value">{{ method.publicParams?.['paybillAccount'] || '—' }}</span>
+                      </div>
+                    </div>
+                  }
+                  @if (method.publicParams?.['instructions']) {
+                    <p class="pay-note">{{ method.publicParams?.['instructions'] }}</p>
+                  }
+                  <label class="field-label mt">
+                    M-Pesa Confirmation Code <span class="req">*</span>
+                    <input formControlName="paymentReference" placeholder="e.g. QHK7X9ABC1" />
+                  </label>
+                }
+
+                <!-- Card -->
+                @if (method.id === 'card') {
+                  @if (method.publicParams?.['gateway']) {
+                    <div class="env-badge">
+                      Gateway: {{ method.publicParams?.['gateway'] | titlecase }}
+                    </div>
+                  }
+                  <div class="card-placeholder">
+                    <div class="card-icons">💳 Visa &nbsp; Mastercard &nbsp; Amex</div>
+                    <p>You will be redirected to our secure card payment page after placing your order.</p>
+                    @if (method.publicParams?.['instructions']) {
+                      <p class="pay-note">{{ method.publicParams?.['instructions'] }}</p>
+                    }
+                  </div>
+                }
+
+                <!-- Cash -->
+                @if (method.id === 'cash') {
+                  <div class="cash-info">
+                    <span class="cash-icon">💵</span>
+                    <div>
+                      <p>Pay in cash upon white-glove delivery or in person at our showroom.</p>
+                      @if (method.publicParams?.['instructions']) {
+                        <p class="pay-note">{{ method.publicParams?.['instructions'] }}</p>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- Bank Transfer -->
+                @if (method.id === 'bank_transfer') {
+                  <div class="bank-details-grid">
+                    @if (method.publicParams?.['bankName']) {
+                      <div class="pay-info-box">
+                        <span class="pay-info-label">Bank</span>
+                        <span class="pay-info-value">{{ method.publicParams?.['bankName'] }}</span>
+                      </div>
+                    }
+                    @if (method.publicParams?.['accountName']) {
+                      <div class="pay-info-box">
+                        <span class="pay-info-label">Account Name</span>
+                        <span class="pay-info-value">{{ method.publicParams?.['accountName'] }}</span>
+                      </div>
+                    }
+                    @if (method.publicParams?.['accountNumber']) {
+                      <div class="pay-info-box">
+                        <span class="pay-info-label">Account No.</span>
+                        <span class="pay-info-value">{{ method.publicParams?.['accountNumber'] }}</span>
+                      </div>
+                    }
+                    @if (method.publicParams?.['swiftCode']) {
+                      <div class="pay-info-box">
+                        <span class="pay-info-label">SWIFT</span>
+                        <span class="pay-info-value">{{ method.publicParams?.['swiftCode'] }}</span>
+                      </div>
+                    }
+                  </div>
+                  <label class="field-label mt">
+                    Payment Reference / Transaction ID
+                    <input formControlName="paymentReference" placeholder="Your bank transaction reference" />
+                  </label>
+                  @if (method.publicParams?.['instructions']) {
+                    <p class="pay-note">{{ method.publicParams?.['instructions'] }}</p>
+                  }
+                }
+
+              </div>
+            }
           }
         </fieldset>
 
+        <!-- Total & Submit -->
         <div class="total-bar">
-          <div>
-            <span>Order total</span>
+          <div class="total-info">
+            <span>Order Total</span>
             <strong>KES {{ total(vm.service.priceKes) | number }}</strong>
           </div>
-          <button type="submit" class="btn primary" [disabled]="submitting()">
-            {{ submitting() ? 'Placing order…' : 'Place order' }}
-          </button>
+          @if (paymentMethods().length > 0) {
+            <button type="submit" class="btn-submit" [disabled]="submitting() || paymentPending()">
+              @if (submitting()) {
+                <span class="btn-spinner"></span> Processing…
+              } @else if (paymentPending()) {
+                ⏳ Awaiting PIN…
+              } @else {
+                Place Order →
+              }
+            </button>
+          }
         </div>
 
         @if (errorMessage()) {
-          <p class="alert error">{{ errorMessage() }}</p>
+          <div class="alert error">⚠ {{ errorMessage() }}</div>
         }
+
       </form>
     }
   </section>

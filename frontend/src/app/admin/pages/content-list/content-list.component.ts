@@ -3,6 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AdminApiService } from '../../services/admin-api.service';
+import { ConfirmDialogService } from '../../../shared/confirm-dialog/confirm-dialog.service';
 
 type EntityType = 'features' | 'press' | 'reviews' | 'faq' | 'gallery' | 'nav' | 'bookings';
 
@@ -17,6 +18,7 @@ export class ContentListComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly api = inject(AdminApiService);
   private readonly fb = inject(FormBuilder);
+  private readonly dialog = inject(ConfirmDialogService);
 
   type = signal<EntityType>('features');
   title = signal('Content');
@@ -147,15 +149,24 @@ export class ContentListComponent implements OnInit {
     }
   }
 
-  remove(row: Record<string, unknown>): void {
+  async remove(row: Record<string, unknown>): Promise<void> {
     const t = this.type();
     const id = row['id'];
+    const confirmed = await this.dialog.confirm({
+      title: t === 'bookings' ? 'Delete Booking Record?' : 'Delete Item?',
+      message: 'This record will be permanently deleted from the database.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      variant: 'danger',
+      icon: '🗑️',
+      badge: 'DELETE',
+    });
+    if (!confirmed) return;
+
     if (t === 'bookings') {
-      if (!confirm('Delete this booking record?')) return;
       this.api.deleteBooking(String(id)).subscribe(() => this.load());
       return;
     }
-    if (!confirm('Delete this item?')) return;
     const map: Record<string, () => void> = {
       features: () => this.api.deleteFeature(String(id)).subscribe(() => this.load()),
       press: () => this.api.deletePress(String(id)).subscribe(() => this.load()),

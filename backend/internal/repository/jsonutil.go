@@ -28,3 +28,28 @@ func unmarshalJSONStrings(raw string) []string {
 	}
 	return items
 }
+
+func marshalJSONMap(m map[string]string) string {
+	if m == nil {
+		m = map[string]string{}
+	}
+	raw, err := json.Marshal(m)
+	if err != nil {
+		return "{}"
+	}
+	return string(raw)
+}
+
+func unmarshalJSONMap(raw string) map[string]string {
+	if raw == "" {
+		return map[string]string{}
+	}
+	var m map[string]string
+	if err := json.Unmarshal([]byte(raw), &m); err != nil {
+		return map[string]string{}
+	}
+	if m == nil {
+		return map[string]string{}
+	}
+	return m
+}

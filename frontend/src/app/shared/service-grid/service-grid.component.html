@@ -1,18 +1,171 @@
+@if (showCategoryFilter && categories().length > 1) {
+  <div class="category-tabs">
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeCategory() === 'all'"
+      (click)="setCategory('all')"
+    >
+      All Items ({{ _services().length }})
+    </button>
+    @for (cat of categories(); track cat) {
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeCategory() === cat"
+        (click)="setCategory(cat)"
+      >
+        {{ cat }}
+      </button>
+    }
+  </div>
+}
+
 <div class="service-grid" [class.compact]="compact">
-  @for (svc of services; track svc.id) {
+  @for (svc of filteredServices(); track svc.id) {
     <article class="service-card" [class.featured]="svc.featured">
-      @if (svc.images?.[0]; as imageUrl) {
-        <div class="card-image">
-          <img [src]="imageUrl | webpImage:520:68" [alt]="svc.name" loading="lazy" decoding="async" />
+      <div class="card-media-wrapper">
+        @if (svc.badge) {
+          <span class="product-badge">{{ svc.badge }}</span>
+        }
+
+        @if (svc.images?.[0]; as imageUrl) {
+          <div class="card-image" (click)="openViewer(svc)">
+            <img [src]="imageUrl | webpImage:520:68" [alt]="svc.name" loading="lazy" decoding="async" />
+            <div class="image-overlay-hint">
+              <span>View 360° / Photos</span>
+            </div>
+          </div>
+        } @else {
+          <div class="emoji">{{ svc.emoji || '✨' }}</div>
+        }
+      </div>
+
+      <div class="card-body">
+        <div class="header-row">
+          <p class="category-label">{{ svc.category || svc.style }}</p>
+          @if (svc.inStock !== false) {
+            <span class="stock-pill in-stock">● In Stock</span>
+          } @else {
+            <span class="stock-pill sold-out">● Made to Order</span>
+          }
         </div>
-      } @else {
-        <div class="emoji">{{ svc.emoji }}</div>
-      }
-      <h3>{{ svc.name }}</h3>
-      <p class="meta">{{ svc.style }} · {{ svc.length }}</p>
-      <p class="desc">{{ svc.description }}</p>
-      <p class="price">KES {{ svc.priceKes | number }}</p>
-      <a class="book-link" [routerLink]="['/checkout']" [queryParams]="{ service: svc.slug }">Order Now ✓</a>
+
+        <h3>{{ svc.name }}</h3>
+
+        @if (getSpecsArray(svc.specs); as specsList) {
+          @if (specsList.length > 0) {
+            <div class="specs-chips">
+              @for (spec of specsList.slice(0, 3); track spec.key) {
+                <span class="spec-chip">
+                  <strong>{{ spec.key }}:</strong> {{ spec.value }}
+                </span>
+              }
+            </div>
+          }
+        }
+
+        <p class="desc">{{ svc.description }}</p>
+
+        <div class="price-row">
+          <div class="prices">
+            <span class="price">
+              {{ svc.currency || 'KES' }} {{ svc.priceKes | number }}
+            </span>
+            @if (svc.originalPriceKes && svc.originalPriceKes > svc.priceKes) {
+              <span class="original-price">
+                {{ svc.currency || 'KES' }} {{ svc.originalPriceKes | number }}
+              </span>
+            }
+          </div>
+
+          <div class="media-triggers">
+            @if (svc.view360 && svc.view360.length > 1) {
+              <button
+                type="button"
+                class="icon-btn"
+                title="Interactive 360 Rotation"
+                (click)="openViewer(svc)"
+              >
+                🔄 360°
+              </button>
+            }
+            @if (svc.videoUrl) {
+              <button
+                type="button"
+                class="icon-btn"
+                title="Play Video Walkthrough"
+                (click)="openViewer(svc)"
+              >
+                ▶ Video
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="action-row">
+          <a class="btn primary book-link" [routerLink]="['/checkout']" [queryParams]="{ service: svc.slug }">
+            Order / Inquire
+          </a>
+          @if (site?.whatsAppUrl) {
+            <a
+              class="btn outline whatsapp-btn"
+              [href]="getWhatsAppLink(svc)"
+              target="_blank"
+              rel="noopener"
+              title="Chat on WhatsApp"
+            >
+              WhatsApp
+            </a>
+          }
+        </div>
+      </div>
     </article>
   }
 </div>
+
+@if (selectedItemForViewer(); as item) {
+  <div class="viewer-modal-backdrop" (click)="closeViewer()">
+    <div class="viewer-modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3>{{ item.name }}</h3>
+          <p class="meta">{{ item.category || item.style }} · {{ item.currency || 'KES' }} {{ item.priceKes | number }}</p>
+        </div>
+        <button type="button" class="close-btn" (click)="closeViewer()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <app-product-image-viewer
+          [alt]="item.name"
+          [emoji]="item.emoji || '✨'"
+          [images]="item.images"
+          [view360]="item.view360"
+          [videoUrl]="item.videoUrl"
+        />
+
+        @if (getSpecsArray(item.specs); as allSpecs) {
+          @if (allSpecs.length > 0) {
+            <div class="modal-specs-table">
+              <h4>Specifications & Details</h4>
+              <div class="specs-grid">
+                @for (spec of allSpecs; track spec.key) {
+                  <div class="spec-row">
+                    <span class="spec-name">{{ spec.key }}</span>
+                    <span class="spec-val">{{ spec.value }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <div class="modal-footer">
+        <a class="btn primary" [routerLink]="['/checkout']" [queryParams]="{ service: item.slug }" (click)="closeViewer()">
+          Proceed to Order / Inquiry →
+        </a>
+      </div>
+    </div>
+  </div>
+}

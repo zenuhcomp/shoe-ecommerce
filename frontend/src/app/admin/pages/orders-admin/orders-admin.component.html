@@ -1,0 +1,190 @@
+<div class="admin-page-header">
+  <div>
+    <h2>📬 Inquiries & Customer Orders</h2>
+    <p class="subtitle">
+      Manage purchase orders, consultations, appointment bookings, and test drive requests. Reply directly to clients on WhatsApp in one click.
+    </p>
+  </div>
+</div>
+
+@if (message(); as msg) {
+  <div class="alert-box" [class.success]="msg.type === 'success'" [class.error]="msg.type === 'error'">
+    <span>{{ msg.text }}</span>
+    <button type="button" class="dismiss-btn" (click)="message.set(null)">✕</button>
+  </div>
+}
+
+<div class="tab-controls">
+  <div class="main-tabs">
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'orders'"
+      (click)="setTab('orders')"
+    >
+      📦 Purchase Orders ({{ orders().length }})
+    </button>
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'bookings'"
+      (click)="setTab('bookings')"
+    >
+      📅 Inquiries & Bookings ({{ bookings().length }})
+    </button>
+  </div>
+
+  @if (activeTab() === 'orders') {
+    <div class="status-filters">
+      <button type="button" [class.active]="statusFilter() === 'all'" (click)="setStatusFilter('all')">All</button>
+      <button type="button" [class.active]="statusFilter() === 'pending_whatsapp'" (click)="setStatusFilter('pending_whatsapp')">WhatsApp</button>
+      <button type="button" [class.active]="statusFilter() === 'pending_delivery'" (click)="setStatusFilter('pending_delivery')">Pay on Delivery</button>
+      <button type="button" [class.active]="statusFilter() === 'completed'" (click)="setStatusFilter('completed')">Completed</button>
+    </div>
+  }
+</div>
+
+@if (loading()) {
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading inquiries...</p>
+  </div>
+} @else {
+  @if (activeTab() === 'orders') {
+    @if (filteredOrders().length === 0) {
+      <div class="empty-state">
+        <p>No orders found matching the filter.</p>
+      </div>
+    } @else {
+      <div class="orders-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID & Date</th>
+              <th>Customer</th>
+              <th>Item / Option</th>
+              <th>Total Amount</th>
+              <th>Method</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (ord of filteredOrders(); track ord.id) {
+              <tr>
+                <td>
+                  <strong>{{ ord.id }}</strong>
+                  <div class="date-meta">{{ ord.createdAt | date: 'short' }}</div>
+                </td>
+                <td>
+                  <strong>{{ ord.name }}</strong>
+                  <div class="phone-link">{{ ord.phone }}</div>
+                  @if (ord.email) {
+                    <div class="email-meta">{{ ord.email }}</div>
+                  }
+                </td>
+                <td>
+                  <strong>{{ ord.serviceName }}</strong>
+                  <div class="sub-meta">Qty: {{ ord.quantity }} @if (ord.size) { · {{ ord.size }} }</div>
+                  @if (ord.notes) {
+                    <div class="order-notes">Notes: {{ ord.notes }}</div>
+                  }
+                </td>
+                <td>
+                  <span class="amount-badge">KES {{ ord.amountKes | number }}</span>
+                </td>
+                <td>
+                  <span class="method-tag">{{ ord.paymentMethod }}</span>
+                </td>
+                <td>
+                  <select
+                    class="status-select"
+                    [value]="ord.status"
+                    (change)="updateStatus(ord, $any($event.target).value)"
+                  >
+                    <option value="pending_whatsapp">Pending (WhatsApp)</option>
+                    <option value="pending_delivery">Pending (Delivery)</option>
+                    <option value="pending_payment">Pending Payment</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed ✓</option>
+                    <option value="cancelled">Cancelled ✕</option>
+                  </select>
+                </td>
+                <td class="action-cell">
+                  <a
+                    class="wa-btn"
+                    [href]="getWhatsAppReply(ord.phone, ord.name, ord.serviceName)"
+                    target="_blank"
+                    rel="noopener"
+                    title="Open WhatsApp Chat"
+                  >
+                    💬 WhatsApp
+                  </a>
+                  <button type="button" class="del-btn" (click)="deleteOrder(ord.id)" title="Delete">🗑</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  } @else {
+    @if (bookings().length === 0) {
+      <div class="empty-state">
+        <p>No booking inquiries yet.</p>
+      </div>
+    } @else {
+      <div class="orders-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID & Date</th>
+              <th>Customer</th>
+              <th>Requested Item</th>
+              <th>Preferred Time</th>
+              <th>Message / Notes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (b of bookings(); track b.id) {
+              <tr>
+                <td>
+                  <strong>{{ b.id }}</strong>
+                  <div class="date-meta">{{ b.createdAt | date: 'short' }}</div>
+                </td>
+                <td>
+                  <strong>{{ b.name }}</strong>
+                  <div class="phone-link">{{ b.phone }}</div>
+                  @if (b.email) {
+                    <div class="email-meta">{{ b.email }}</div>
+                  }
+                </td>
+                <td>
+                  <span class="service-tag">{{ b.serviceSlug || 'General Inquiry' }}</span>
+                </td>
+                <td>
+                  <span class="pref-date">{{ b.preferredAt || 'Flexible' }}</span>
+                </td>
+                <td>
+                  <p class="inquiry-msg">{{ b.message || '—' }}</p>
+                </td>
+                <td class="action-cell">
+                  <a
+                    class="wa-btn"
+                    [href]="getWhatsAppReply(b.phone, b.name, b.serviceSlug)"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    💬 WhatsApp
+                  </a>
+                  <button type="button" class="del-btn" (click)="deleteBooking(b.id)" title="Delete">🗑</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+}

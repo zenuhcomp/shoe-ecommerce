@@ -1,145 +1,351 @@
 @if (home$ | async; as home) {
-  <section class="hero" id="page-top">
-    <div class="hero-inner">
-      <span class="hero-badge">{{ home.site.heroBadge }}</span>
-      <h1>{{ home.site.heroTitle }}</h1>
-      <p class="hero-script">{{ home.site.tagline }}</p>
-      <p class="hero-sub">{{ home.site.heroSubtitle }}</p>
-      <div class="hero-actions">
-        <a class="btn primary" [href]="home.site.whatsAppUrl" target="_blank" rel="noopener">Shop on WhatsApp</a>
-        <a class="btn outline" routerLink="/collections">Browse Collections</a>
-      </div>
-    </div>
-  </section>
+  @if (home.sections && home.sections.length > 0) {
+    <!-- Dynamic Section-Based Rendering -->
+    @for (sec of home.sections; track sec.id) {
+      @switch (sec.type) {
+        @case ('hero') {
+          <section
+            class="hero section-hero"
+            [id]="sec.id"
+            [class]="'anim-' + (sec.animation || 'slide-up')"
+            [class.has-video-bg]="sec.backgroundType === 'video' || (home.site.heroBackgroundType === 'video' && (sec.backgroundVideo || home.site.heroVideoUrl))"
+            [style.backgroundColor]="sec.backgroundType === 'color' ? sec.backgroundColor : null"
+          >
+            @if (sec.backgroundType === 'video' || (home.site.heroBackgroundType === 'video' && (sec.backgroundVideo || home.site.heroVideoUrl))) {
+              <div class="video-bg-container">
+                <video
+                  [src]="sec.backgroundVideo || home.site.heroVideoUrl"
+                  autoplay
+                  muted
+                  loop
+                  playsinline
+                ></video>
+                <div class="video-overlay" [style.opacity]="(sec.overlayOpacity || home.site.heroOverlayOpacity || 40) / 100"></div>
+              </div>
+            }
 
-  <section class="press section">
-    <p class="press-label">~ As Featured In ~</p>
-    <app-section-heading
-      title="The Shoes <span class='accent'>Professionals Trust</span>"
-      [center]="true"
-    />
-    <div class="press-grid">
-      @for (p of home.press; track p.name) {
-        <div class="press-item">
-          <strong>{{ p.name }}</strong>
-          <span>{{ p.note }}</span>
+            <div class="hero-inner">
+              @if (sec.badge || home.site.heroBadge) {
+                <span class="hero-badge">{{ sec.badge || home.site.heroBadge }}</span>
+              }
+              <h1 [innerHTML]="sec.title || home.site.heroTitle"></h1>
+              @if (sec.subtitle || home.site.heroSubtitle) {
+                <p class="hero-sub">{{ sec.subtitle || home.site.heroSubtitle }}</p>
+              }
+              <div class="hero-actions">
+                @if (sec.primaryCtaText) {
+                  <a class="btn primary" [routerLink]="sec.primaryCtaUrl || '/collections'">
+                    {{ sec.primaryCtaText }}
+                  </a>
+                }
+                @if (sec.secondaryCtaText) {
+                  <a
+                    class="btn outline"
+                    [href]="sec.secondaryCtaUrl || home.site.whatsAppUrl"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    {{ sec.secondaryCtaText }}
+                  </a>
+                }
+              </div>
+            </div>
+          </section>
+        }
+
+        @case ('features') {
+          <section
+            class="section features"
+            [id]="sec.id"
+            [class]="'anim-' + (sec.animation || 'fade-in')"
+            [style.backgroundColor]="sec.backgroundType === 'color' ? sec.backgroundColor : null"
+          >
+            <app-section-heading
+              [eyebrow]="sec.badge || '~ Our Guarantees ~'"
+              [title]="sec.title || 'What Sets Us <span class=\'accent\'>Apart</span>'"
+              [subtitle]="sec.subtitle || 'Every detail engineered for your absolute satisfaction'"
+              [center]="true"
+            />
+            <div class="feature-grid">
+              @for (f of home.features; track f.title) {
+                <article [class]="'hover-' + (sec.hoverEffect || 'lift')">
+                  <span class="icon">{{ f.icon }}</span>
+                  <h3>{{ f.title }}</h3>
+                  <p>{{ f.description }}</p>
+                </article>
+              }
+            </div>
+          </section>
+        }
+
+        @case ('products') {
+          <section
+            class="section products-section"
+            [id]="sec.id"
+            [class]="'anim-' + (sec.animation || 'slide-up')"
+            [style.backgroundColor]="sec.backgroundType === 'color' ? sec.backgroundColor : null"
+          >
+            <app-section-heading
+              [eyebrow]="sec.badge || '~ Featured Catalog ~'"
+              [title]="sec.title || 'Explore Our <span class=\'accent\'>Curated Collection</span>'"
+              [subtitle]="sec.subtitle || 'Browse verified items, full specifications, and 360° interactive views'"
+              [center]="true"
+            />
+            <app-service-grid [services]="home.services" [site]="home.site" [compact]="false" />
+            @if (sec.primaryCtaText) {
+              <div class="section-cta">
+                <a class="btn outline" [routerLink]="sec.primaryCtaUrl || '/collections'">
+                  {{ sec.primaryCtaText }} →
+                </a>
+              </div>
+            }
+          </section>
+        }
+
+        @case ('video_banner') {
+          <section
+            class="section video-showcase-banner"
+            [id]="sec.id"
+            [class]="'anim-' + (sec.animation || 'zoom-in')"
+          >
+            <div class="video-bg-container">
+              <video
+                [src]="sec.backgroundVideo || home.site.heroVideoUrl"
+                autoplay
+                muted
+                loop
+                playsinline
+              ></video>
+              <div class="video-overlay" [style.opacity]="(sec.overlayOpacity || 50) / 100"></div>
+            </div>
+
+            <div class="banner-glass-card">
+              @if (sec.badge) {
+                <span class="hero-badge">{{ sec.badge }}</span>
+              }
+              <h2 [innerHTML]="sec.title"></h2>
+              @if (sec.subtitle) {
+                <p class="banner-sub">{{ sec.subtitle }}</p>
+              }
+              @if (sec.primaryCtaText) {
+                <a class="btn primary" [routerLink]="sec.primaryCtaUrl || '/collections'">
+                  {{ sec.primaryCtaText }}
+                </a>
+              }
+            </div>
+          </section>
+        }
+
+        @case ('gallery') {
+          <section
+            class="section lookbook"
+            [id]="sec.id"
+            [class]="'anim-' + (sec.animation || 'fade-in')"
+          >
+            <app-section-heading
+              [eyebrow]="sec.badge || '~ Lookbook ~'"
+              [title]="sec.title || 'Visual <span class=\'accent\'>Showcase</span>'"
+              [subtitle]="sec.subtitle || 'A visual journey through our latest curation'"
+              [center]="true"
+            />
+            <div class="lookbook-grid">
+              @for (item of home.gallery; track item.id) {
+                <figure class="hover-scale">
+                  <img [src]="item.imageUrl | webpImage:560:70" [alt]="item.alt" loading="lazy" decoding="async" />
+                  <figcaption>{{ item.title }}</figcaption>
+                </figure>
+              }
+            </div>
+            @if (sec.primaryCtaText) {
+              <div class="section-cta">
+                <a class="btn outline" [routerLink]="sec.primaryCtaUrl || '/gallery'">
+                  {{ sec.primaryCtaText }} →
+                </a>
+              </div>
+            }
+          </section>
+        }
+
+        @case ('pricing') {
+          <section
+            class="section pricing-banner"
+            [id]="sec.id"
+            [class]="'anim-' + (sec.animation || 'slide-up')"
+          >
+            <app-section-heading
+              [eyebrow]="sec.badge || '~ Investment ~'"
+              [title]="sec.title || home.site.pricingHighlight.title"
+              [subtitle]="sec.subtitle || home.site.pricingHighlight.subtitle"
+              [light]="true"
+              [center]="true"
+            />
+            <div class="pricing-card">
+              <span class="badge">{{ home.site.pricingHighlight.badge }}</span>
+              <p class="range">
+                {{ home.site.pricingHighlight.currency }}
+                {{ home.site.pricingHighlight.priceFrom | number }} – {{ home.site.pricingHighlight.priceTo | number }}
+              </p>
+              <p class="note">{{ home.site.pricingHighlight.studioNote }}</p>
+              <p class="includes">{{ home.site.pricingHighlight.includes }}</p>
+              <a [routerLink]="sec.primaryCtaUrl || '/pricing'" class="btn primary">
+                {{ sec.primaryCtaText || 'View Full Price List' }} ◆
+              </a>
+            </div>
+          </section>
+        }
+
+        @case ('reviews') {
+          <section
+            class="section reviews"
+            [id]="sec.id"
+            [class]="'anim-' + (sec.animation || 'slide-up')"
+          >
+            <app-section-heading
+              [eyebrow]="sec.badge || '~ Client Words ~'"
+              [title]="sec.title || 'Stories That <span class=\'accent\'>Speak Volumes</span>'"
+              [subtitle]="sec.subtitle || 'Verified reviews from clients across East Africa'"
+              [center]="true"
+            />
+            <div class="review-grid">
+              @for (r of home.reviews; track r.id) {
+                <article class="review-card hover-lift">
+                  <div class="avatar">{{ r.initials }}</div>
+                  <div>
+                    <strong>{{ r.name }}</strong>
+                    <span>{{ r.handle }}</span>
+                    <p class="stars">★★★★★</p>
+                    <blockquote>{{ r.quote }}</blockquote>
+                  </div>
+                </article>
+              }
+            </div>
+          </section>
+        }
+
+        @case ('faq') {
+          <section
+            class="section faq"
+            [id]="sec.id"
+            [class]="'anim-' + (sec.animation || 'fade-in')"
+          >
+            <app-section-heading
+              [eyebrow]="sec.badge || '~ Common Inquiries ~'"
+              [title]="sec.title || 'Frequently <span class=\'accent\'>Asked Questions</span>'"
+              [subtitle]="sec.subtitle || 'Everything you need to know about our services, ordering, and delivery'"
+              [center]="true"
+            />
+            <app-faq-list [items]="home.faq" />
+          </section>
+        }
+
+        @case ('about') {
+          <section
+            class="section about-section"
+            [id]="sec.id"
+            [class]="'anim-' + (sec.animation || 'slide-up')"
+          >
+            <app-section-heading
+              [eyebrow]="sec.badge || '~ Brand Narrative ~'"
+              [title]="sec.title || home.site.about.title"
+              [subtitle]="sec.subtitle || home.site.about.intro"
+              [center]="true"
+            />
+            <div class="about-content">
+              <p class="story">{{ home.site.about.story }}</p>
+              <div class="highlights-grid">
+                @for (h of home.site.about.highlights; track h) {
+                  <div class="highlight-item">
+                    <span class="check">✓</span>
+                    <span>{{ h }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </section>
+        }
+
+        @case ('inquiry') {
+          <section
+            class="section inquiry-section"
+            [id]="sec.id"
+            [class]="'anim-' + (sec.animation || 'slide-up')"
+          >
+            <app-section-heading
+              [eyebrow]="sec.badge || '~ Direct Contact ~'"
+              [title]="sec.title || 'Make an <span class=\'accent\'>Inquiry or Order</span>'"
+              [subtitle]="sec.subtitle || 'Fill out the form below and our team will get back to you promptly'"
+              [center]="true"
+            />
+            <div class="inquiry-container">
+              <app-booking-form [services]="home.services" />
+            </div>
+          </section>
+        }
+
+        @case ('cta') {
+          <section
+            class="section cta-final"
+            [id]="sec.id"
+            [class]="'anim-' + (sec.animation || 'slide-up')"
+          >
+            <app-section-heading
+              [eyebrow]="sec.badge || '~ Connect With Us ~'"
+              [title]="sec.title || 'Ready to <span class=\'accent\'>Begin</span>?'"
+              [subtitle]="sec.subtitle || 'Our team is ready to assist you on WhatsApp or in our showroom'"
+              [light]="true"
+              [center]="true"
+            />
+            <a class="btn primary large" [href]="sec.primaryCtaUrl || home.site.whatsAppUrl" target="_blank" rel="noopener">
+              {{ sec.primaryCtaText || 'Connect via WhatsApp' }} ◆
+            </a>
+          </section>
+        }
+      }
+    }
+  } @else {
+    <!-- Fallback default rendering if no dynamic sections configured -->
+    <section class="hero" id="page-top">
+      <div class="hero-inner">
+        <span class="hero-badge">{{ home.site.heroBadge }}</span>
+        <h1 [innerHTML]="home.site.heroTitle"></h1>
+        <p class="hero-script">{{ home.site.tagline }}</p>
+        <p class="hero-sub">{{ home.site.heroSubtitle }}</p>
+        <div class="hero-actions">
+          <a class="btn primary" [href]="home.site.whatsAppUrl" target="_blank" rel="noopener">Shop on WhatsApp</a>
+          <a class="btn outline" routerLink="/collections">Browse Collections</a>
         </div>
-      }
-    </div>
-    <blockquote class="press-quote">
-      "Nairobi's go-to for polished office footwear — curated styles that look sharp from nine to five and beyond."
-    </blockquote>
-  </section>
+      </div>
+    </section>
 
-  <section class="section features">
-    <app-section-heading
-      eyebrow="~ Why Luna Collections ~"
-      title="What Makes Us <span class='accent'>Different</span>"
-      subtitle="Every pair chosen for the woman who shows up ready to lead"
-    />
-    <div class="feature-grid">
-      @for (f of home.features; track f.title) {
-        <article>
-          <span class="icon">{{ f.icon }}</span>
-          <h3>{{ f.title }}</h3>
-          <p>{{ f.description }}</p>
-        </article>
-      }
-    </div>
-  </section>
+    <section class="section features">
+      <app-section-heading
+        eyebrow="~ Why Luna Collections ~"
+        title="What Makes Us <span class='accent'>Different</span>"
+        subtitle="Every pair chosen for the modern leader"
+        [center]="true"
+      />
+      <div class="feature-grid">
+        @for (f of home.features; track f.title) {
+          <article class="hover-lift">
+            <span class="icon">{{ f.icon }}</span>
+            <h3>{{ f.title }}</h3>
+            <p>{{ f.description }}</p>
+          </article>
+        }
+      </div>
+    </section>
 
-  <section class="section lookbook">
-    <app-section-heading
-      eyebrow="~ Lookbook ~"
-      title="Styles That <span class='accent'>Lead the Room</span>"
-      subtitle="A glimpse of our official footwear collection"
-    />
-    <div class="lookbook-grid">
-      @for (item of home.gallery; track item.id) {
-        <figure>
-          <img [src]="item.imageUrl | webpImage:560:70" [alt]="item.alt" loading="lazy" decoding="async" />
-          <figcaption>{{ item.title }}</figcaption>
-        </figure>
-      }
-    </div>
-    <div class="section-cta">
-      <a routerLink="/gallery">View Full Gallery →</a>
-    </div>
-  </section>
-
-  <section class="section services-preview">
-    <app-section-heading
-      eyebrow="~ Best Sellers ~"
-      title="Find Your <span class='accent'>Perfect Pair</span>"
-      subtitle="From classic pumps to structured oxfords — office-ready and beautifully made"
-    />
-    <app-service-grid [services]="home.services" [site]="home.site" [compact]="true" />
-    <div class="section-cta">
-      <a routerLink="/collections">View All Collections →</a>
-    </div>
-  </section>
-
-  <section class="section pricing-banner">
-    <app-section-heading
-      eyebrow="~ Pricing ~"
-      [title]="home.site.pricingHighlight.title"
-      [subtitle]="home.site.pricingHighlight.subtitle"
-      [light]="true"
-    />
-    <div class="pricing-card">
-      <span class="badge">{{ home.site.pricingHighlight.badge }}</span>
-      <p class="range">
-        {{ home.site.pricingHighlight.currency }}
-        {{ home.site.pricingHighlight.priceFrom | number }} – {{ home.site.pricingHighlight.priceTo | number }}
-      </p>
-      <p class="note">{{ home.site.pricingHighlight.studioNote }}</p>
-      <p class="includes">{{ home.site.pricingHighlight.includes }}</p>
-      <a routerLink="/pricing" class="btn primary">View Full Price List ◆</a>
-    </div>
-  </section>
-
-  <section class="section reviews">
-    <app-section-heading
-      eyebrow="~ Happy Customers ~"
-      title="Steps That <span class='accent'>Speak for Themselves</span>"
-      subtitle="Real reviews from professionals who trust Luna Collections"
-    />
-    <div class="review-grid">
-      @for (r of home.reviews; track r.id) {
-        <article class="review-card">
-          <div class="avatar">{{ r.initials }}</div>
-          <div>
-            <strong>{{ r.name }}</strong>
-            <span>{{ r.handle }}</span>
-            <p class="stars">★★★★★</p>
-            <blockquote>{{ r.quote }}</blockquote>
-          </div>
-        </article>
-      }
-    </div>
-    <div class="section-cta">
-      <a routerLink="/reviews">Read All Reviews →</a>
-    </div>
-  </section>
-
-  <section class="section faq">
-    <app-section-heading
-      eyebrow="~ Got Questions? ~"
-      title="Frequently <span class='accent'>Asked Questions</span>"
-      subtitle="Sizing, delivery, exchanges, and everything in between"
-    />
-    <app-faq-list [items]="home.faq" />
-  </section>
-
-  <section class="section cta-final">
-    <app-section-heading
-      eyebrow="~ Ready to Step Up? ~"
-      title="Order Your Pair <span class='accent'>Today</span>"
-      subtitle="WhatsApp us for sizing help — walk-ins welcome at our Westlands showroom"
-      [light]="true"
-    />
-    <a class="btn primary large" [href]="home.site.whatsAppUrl" target="_blank" rel="noopener"
-      >Shop via WhatsApp ◆</a
-    >
-  </section>
+    <section class="section services-preview">
+      <app-section-heading
+        eyebrow="~ Best Sellers ~"
+        title="Find Your <span class='accent'>Perfect Match</span>"
+        subtitle="Curated collection with transparent pricing and full specifications"
+        [center]="true"
+      />
+      <app-service-grid [services]="home.services" [site]="home.site" [compact]="true" />
+      <div class="section-cta">
+        <a class="btn outline" routerLink="/collections">View All Collections →</a>
+      </div>
+    </section>
+  }
 }

@@ -17,43 +17,82 @@ import { PageHeroComponent } from '../../shared/page-hero/page-hero.component';
       <section class="page-section about-content">
         <p class="intro">{{ site.about.intro }}</p>
         <p class="story">{{ site.about.story }}</p>
-        <ul>
+        <ul class="highlights">
           @for (h of site.about.highlights; track h) {
-            <li>{{ h }}</li>
+            <li>
+              <span class="bullet">✓</span>
+              <span>{{ h }}</span>
+            </li>
           }
         </ul>
-        <p class="location">Showroom: {{ site.studioAddress }}, {{ site.location }}</p>
+        <div class="location-card">
+          <strong>Showroom & Atelier:</strong>
+          <p>{{ site.studioAddress }}, {{ site.location }}</p>
+        </div>
       </section>
     }
   `,
   styles: [
     `
       .page-section {
-        max-width: 720px;
+        max-width: 800px;
         margin: 0 auto;
-        padding: 2rem 1.5rem 4rem;
+        padding: 2.5rem var(--page-gutter) 4.5rem;
       }
       .intro {
-        font-family: var(--font-script);
-        font-size: 1.5rem;
-        color: var(--color-primary);
-        margin-bottom: 1rem;
+        font-family: var(--font-heading);
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--color-accent);
+        margin-bottom: 1.25rem;
+        line-height: 1.5;
       }
       .story {
         line-height: 1.8;
-        color: var(--color-text-muted);
-        margin-bottom: 1.5rem;
-      }
-      ul {
-        padding-left: 1.25rem;
+        color: var(--color-text);
         margin-bottom: 2rem;
+        font-size: 1.05rem;
+      }
+      .highlights {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 2rem 0;
+        display: grid;
+        gap: 0.85rem;
+
         li {
-          margin-bottom: 0.5rem;
+          display: flex;
+          align-items: baseline;
+          gap: 0.75rem;
+          color: var(--color-text);
+          font-size: 0.95rem;
+          line-height: 1.6;
+
+          .bullet {
+            color: var(--color-accent);
+            font-weight: 800;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+          }
         }
       }
-      .location {
-        font-weight: 600;
-        color: var(--color-primary);
+      .location-card {
+        padding: 1.25rem 1.5rem;
+        background: var(--color-surface);
+        border: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent);
+        border-radius: 14px;
+        color: var(--color-text);
+
+        strong {
+          color: var(--color-accent);
+          display: block;
+          margin-bottom: 0.35rem;
+        }
+
+        p {
+          margin: 0;
+          color: var(--color-text-muted);
+        }
       }
     `,
   ],

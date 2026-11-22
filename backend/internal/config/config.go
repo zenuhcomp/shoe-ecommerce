@@ -29,6 +29,14 @@ type Config struct {
 	AdminPassword  string
 	AdminName      string
 	JWTExpiryHours int
+
+	// Safaricom M-Pesa Configuration (Production / .env)
+	SafaricomBaseURL string
+	ConsumerKey      string
+	ConsumerSecret   string
+	PassKey          string
+	ShortCode        string
+	CallbackURL      string
 }
 
 type PostgresConfig struct {
@@ -41,7 +49,8 @@ type PostgresConfig struct {
 }
 
 func Load() (Config, error) {
-	_ = godotenv.Load(defaultEnvPath())
+	envFile := defaultEnvPath()
+	_ = godotenv.Overload(envFile)
 
 	cfg := Config{
 		AppEnv:       getenv("APP_ENV", "development"),
@@ -63,6 +72,13 @@ func Load() (Config, error) {
 		AdminPassword:  getenv("CMS_ADMIN_PASSWORD", "luna-admin-change-me"),
 		AdminName:      getenv("CMS_ADMIN_NAME", "Site Admin"),
 		JWTExpiryHours: getenvInt("JWT_EXPIRY_HOURS", 24),
+
+		SafaricomBaseURL: getenv("SAFARICOM_BASE_URL", "https://api.safaricom.co.ke"),
+		ConsumerKey:      os.Getenv("CONSUMER_KEY"),
+		ConsumerSecret:   os.Getenv("CONSUMER_SECRET"),
+		PassKey:          os.Getenv("PASSKEY"),
+		ShortCode:        firstNonEmpty(os.Getenv("COUNTY_SHORTC0DE"), os.Getenv("COUNTY_SHORTCODE"), os.Getenv("SHORT_CODE"), os.Getenv("SHORTCODE"), os.Getenv("BUSINESS_SHORTCODE")),
+		CallbackURL:      os.Getenv("MPESA_CALLBACK_URL"),
 	}
 
 	if raw := os.Getenv("CORS_ORIGINS"); raw != "" {
@@ -82,15 +98,21 @@ func defaultEnvPath() string {
 		return p
 	}
 	if wd, err := os.Getwd(); err == nil {
-		candidate := filepath.Join(wd, ".env")
-		if _, err := os.Stat(candidate); err == nil {
-			return candidate
-		}
-		if filepath.Base(wd) != "backend" {
-			candidate = filepath.Join(wd, "backend", ".env")
-			if _, err := os.Stat(candidate); err == nil {
-				return candidate
+		dir := wd
+		for i := 0; i < 6; i++ {
+			c1 := filepath.Join(dir, ".env")
+			if fi, err := os.Stat(c1); err == nil && !fi.IsDir() {
+				return c1
 			}
+			c2 := filepath.Join(dir, "backend", ".env")
+			if fi, err := os.Stat(c2); err == nil && !fi.IsDir() {
+				return c2
+			}
+			parent := filepath.Dir(dir)
+			if parent == dir {
+				break
+			}
+			dir = parent
 		}
 	}
 	return ".env"
@@ -166,4 +188,13 @@ func splitCSV(s string) []string {
 		}
 	}
 	return out
+}
+
+func firstNonEmpty(items ...string) string {
+	for _, s := range items {
+		if strings.TrimSpace(s) != "" {
+			return strings.TrimSpace(s)
+		}
+	}
+	return ""
 }

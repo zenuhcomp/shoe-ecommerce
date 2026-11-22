@@ -1,0 +1,290 @@
+<app-confirm-dialog />
+
+@if (toast(); as t) {
+  <div class="toast" [class]="'toast-' + t.type">
+    <span>{{ t.type === 'success' ? '✓' : '✕' }}</span>
+    {{ t.message }}
+  </div>
+}
+
+<div class="page-header">
+  <div class="header-info">
+    <h1>Payment Gateways</h1>
+    <p>Enable and configure the payment methods available to customers at checkout. Changes take effect immediately.</p>
+  </div>
+  <button class="btn-save" [disabled]="saving()" (click)="save()">
+    {{ saving() ? '⟳ Saving…' : '💾 Save Configuration' }}
+  </button>
+</div>
+
+@if (loading()) {
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading payment configuration…</p>
+  </div>
+} @else {
+  <form [formGroup]="form" class="payments-grid">
+
+    <!-- ── M-Pesa Online (STK Push) ─────────────────────────── -->
+    <div class="gateway-card" [class.enabled]="form.get('mpesaExpressEnabled')?.value">
+      <div class="card-header">
+        <div class="gateway-icon mpesa">📱</div>
+        <div class="gateway-meta">
+          <h2>Lipa Na M-Pesa Online</h2>
+          <span class="gateway-type">Daraja STK Push · Real-time</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" formControlName="mpesaExpressEnabled" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      @if (isMethodEnabled('mpesa_express')) {
+        <div class="status-badge enabled">● Live</div>
+      } @else {
+        <div class="status-badge disabled">○ Disabled</div>
+      }
+      <p class="card-desc">Customer receives an instant PIN prompt on their phone. Requires Safaricom Daraja API credentials.</p>
+      <div class="card-fields">
+        <div class="field-group">
+          <label>Consumer Key <span class="req">*</span></label>
+          <input formControlName="consumerKey" placeholder="From Safaricom Developer Portal" autocomplete="off" />
+        </div>
+        <div class="field-group">
+          <label>Consumer Secret <span class="req">*</span></label>
+          <div class="password-field">
+            <input [type]="showConsumerSecret() ? 'text' : 'password'" formControlName="consumerSecret" placeholder="••••••••••••••••" autocomplete="new-password" />
+            <button type="button" class="eye-btn" (click)="toggleConsumerSecret()">
+              {{ showConsumerSecret() ? '🙈' : '👁' }}
+            </button>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Pass Key <span class="req">*</span></label>
+          <div class="password-field">
+            <input [type]="showPassKey() ? 'text' : 'password'" formControlName="passKey" placeholder="••••••••••••••••" autocomplete="new-password" />
+            <button type="button" class="eye-btn" (click)="togglePassKey()">
+              {{ showPassKey() ? '🙈' : '👁' }}
+            </button>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Business Shortcode</label>
+          <input formControlName="shortCode" placeholder="e.g. 4005953 (County/Business Shortcode)" />
+        </div>
+        <div class="field-group">
+          <label>Account Reference</label>
+          <input formControlName="accountReference" placeholder="e.g. Order #{{'{'}}{{'order'}}{{'}'}}" />
+        </div>
+        <div class="field-group">
+          <label>Environment</label>
+          <select formControlName="environment">
+            <option value="production">Production (Live Safaricom)</option>
+            <option value="sandbox">Sandbox (Testing)</option>
+          </select>
+        </div>
+        <div class="field-group full">
+          <label>Callback URL (Defaults to .env MPESA_CALLBACK_URL)</label>
+          <input formControlName="callbackUrl" placeholder="https://backend.tuseme.co.ke/api/v1/payments/callback/" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ── M-Pesa Offline (Till & Paybill) ───────────────────── -->
+    <div class="gateway-card" [class.enabled]="form.get('mpesaManualEnabled')?.value">
+      <div class="card-header">
+        <div class="gateway-icon mpesa">🏷️</div>
+        <div class="gateway-meta">
+          <h2>M-Pesa Offline</h2>
+          <span class="gateway-type">Till Number & Paybill · Manual Verify</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" formControlName="mpesaManualEnabled" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      @if (isMethodEnabled('mpesa_manual')) {
+        <div class="status-badge enabled">● Live</div>
+      } @else {
+        <div class="status-badge disabled">○ Disabled</div>
+      }
+      <p class="card-desc">Customer sends M-Pesa to your Till or Paybill, then submits the confirmation code.</p>
+      <div class="card-fields">
+        <div class="field-group">
+          <label>Till Number (Buy Goods)</label>
+          <input formControlName="tillNumber" placeholder="e.g. 902411" />
+        </div>
+        <div class="field-group">
+          <label>Paybill Number</label>
+          <input formControlName="paybillNumber" placeholder="e.g. 247247" />
+        </div>
+        <div class="field-group">
+          <label>Paybill Account Name</label>
+          <input formControlName="paybillAccount" placeholder="e.g. Luna Collections" />
+        </div>
+        <div class="field-group full">
+          <label>Custom Instructions (shown to customer)</label>
+          <textarea formControlName="mpesaInstructions" rows="3" placeholder="e.g. Send to Till 902411, screenshot and WhatsApp to…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Credit / Debit Card ───────────────────────────────── -->
+    <div class="gateway-card" [class.enabled]="form.get('cardEnabled')?.value">
+      <div class="card-header">
+        <div class="gateway-icon card">💳</div>
+        <div class="gateway-meta">
+          <h2>Credit & Debit Card</h2>
+          <span class="gateway-type">Visa · MasterCard · Amex</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" formControlName="cardEnabled" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      @if (isMethodEnabled('card')) {
+        <div class="status-badge enabled">● Live</div>
+      } @else {
+        <div class="status-badge disabled">○ Disabled</div>
+      }
+      <p class="card-desc">Secure online card payment with 3D Secure support via your preferred payment gateway.</p>
+      <div class="card-fields">
+        <div class="field-group">
+          <label>Payment Gateway</label>
+          <select formControlName="cardGateway">
+            <option value="">Select gateway…</option>
+            <option value="stripe">Stripe</option>
+            <option value="intasend">IntaSend</option>
+            <option value="pesapal">PesaPal</option>
+            <option value="flutterwave">Flutterwave</option>
+            <option value="custom">Custom Integration</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Public / Publishable Key</label>
+          <input formControlName="cardPublicKey" placeholder="pk_live_…" autocomplete="off" />
+        </div>
+        <div class="field-group">
+          <label>Secret Key</label>
+          <div class="password-field">
+            <input [type]="showCardSecret() ? 'text' : 'password'" formControlName="cardSecretKey" placeholder="sk_live_…" autocomplete="new-password" />
+            <button type="button" class="eye-btn" (click)="toggleCardSecret()">
+              {{ showCardSecret() ? '🙈' : '👁' }}
+            </button>
+          </div>
+        </div>
+        <div class="field-group full">
+          <label>Customer Instructions (optional)</label>
+          <textarea formControlName="cardInstructions" rows="2" placeholder="e.g. 3D Secure OTP will be sent to your registered number"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Cash on Delivery ──────────────────────────────────── -->
+    <div class="gateway-card" [class.enabled]="form.get('cashEnabled')?.value">
+      <div class="card-header">
+        <div class="gateway-icon cash">💵</div>
+        <div class="gateway-meta">
+          <h2>Cash on Delivery</h2>
+          <span class="gateway-type">In-Store Pickup · White-Glove Delivery</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" formControlName="cashEnabled" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      @if (isMethodEnabled('cash')) {
+        <div class="status-badge enabled">● Live</div>
+      } @else {
+        <div class="status-badge disabled">○ Disabled</div>
+      }
+      <p class="card-desc">Customer pays cash upon delivery or in-person at your showroom/sanctuary.</p>
+      <div class="card-fields">
+        <div class="field-group full">
+          <label>Delivery Instructions</label>
+          <textarea formControlName="cashInstructions" rows="3" placeholder="e.g. Cash payment accepted at Westlands showroom. Delivery orders: payment upon handover to our driver."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Bank Transfer / RTGS / KCB Buni ──────────────────── -->
+    <div class="gateway-card wide" [class.enabled]="form.get('bankEnabled')?.value">
+      <div class="card-header">
+        <div class="gateway-icon bank">🏦</div>
+        <div class="gateway-meta">
+          <h2>Bank Wire / RTGS / KCB Buni</h2>
+          <span class="gateway-type">Commercial Banks · Corporate Transfers</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" formControlName="bankEnabled" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      @if (isMethodEnabled('bank_transfer')) {
+        <div class="status-badge enabled">● Live</div>
+      } @else {
+        <div class="status-badge disabled">○ Disabled</div>
+      }
+      <p class="card-desc">Supports direct bank deposits, RTGS wire transfers, and KCB Buni / corporate online banking.</p>
+      <div class="card-fields">
+        <div class="field-group">
+          <label>Bank Name</label>
+          <input formControlName="bankName" placeholder="e.g. KCB Bank Kenya" />
+        </div>
+        <div class="field-group">
+          <label>Account Name</label>
+          <input formControlName="bankAccountName" placeholder="e.g. Luna Collections Ltd" />
+        </div>
+        <div class="field-group">
+          <label>Account Number</label>
+          <input formControlName="bankAccountNo" placeholder="e.g. 1234567890" />
+        </div>
+        <div class="field-group">
+          <label>Branch</label>
+          <input formControlName="bankBranch" placeholder="e.g. Westlands Branch" />
+        </div>
+        <div class="field-group">
+          <label>SWIFT / BIC Code</label>
+          <input formControlName="bankSwiftCode" placeholder="e.g. KCBLKENX" />
+        </div>
+        <div class="field-group full">
+          <label>Payment Instructions</label>
+          <textarea formControlName="bankInstructions" rows="3" placeholder="e.g. Use your order ID as payment reference. Send proof of payment to accounts@…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Safaricom Callback Reconciliation Simulator ──────── -->
+    <div class="gateway-card wide simulator-card">
+      <div class="card-header">
+        <div class="gateway-icon mpesa">⚡</div>
+        <div class="gateway-meta">
+          <h2>Safaricom Callback Reconciliation Simulator</h2>
+          <span class="gateway-type">Test Callback Webhook & Real-Time Order Settlement</span>
+        </div>
+      </div>
+      <p class="card-desc">Simulate a live Safaricom Daraja STK Push callback payload to test end-to-end reconciliation: transitions order status to <strong>PAID</strong>, generates an M-Pesa receipt, and appends audit trail.</p>
+      <div class="simulator-form">
+        <input [value]="simOrderId()" (input)="simOrderId.set($any($event.target).value)" placeholder="Enter Order ID (e.g. ord-00001)" />
+        <button type="button" class="btn-sim-trigger" (click)="simulateCallback()" [disabled]="simulating()">
+          {{ simulating() ? '⟳ Reconciling…' : '⚡ Simulate Callback & Reconcile' }}
+        </button>
+      </div>
+      @if (simResult()) {
+        <div class="sim-result-banner">{{ simResult() }}</div>
+      }
+    </div>
+
+  </form>
+
+  <div class="active-methods-summary">
+    <h3>Active Methods at Checkout</h3>
+    <div class="method-pills">
+      @for (m of methods(); track m.id) {
+        <div class="method-pill" [class.active]="m.enabled">
+          <span class="pill-dot">{{ m.enabled ? '●' : '○' }}</span>
+          {{ m.name }}
+        </div>
+      }
+    </div>
+  </div>
+}

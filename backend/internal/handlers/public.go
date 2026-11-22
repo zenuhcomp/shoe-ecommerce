@@ -131,6 +131,29 @@ func (a *PublicAPI) Gallery(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, list)
 }
 
+func (a *PublicAPI) Sections(w http.ResponseWriter, r *http.Request) {
+	list, err := a.repo.Sections(r.Context(), false)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load sections")
+		return
+	}
+	writeJSON(w, http.StatusOK, list)
+}
+
+func (a *PublicAPI) Presets(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, http.StatusOK, a.repo.ListPresets())
+}
+
+func (a *PublicAPI) Media(w http.ResponseWriter, r *http.Request) {
+	category := r.URL.Query().Get("category")
+	list, err := a.repo.MediaAssets(r.Context(), category)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to load media")
+		return
+	}
+	writeJSON(w, http.StatusOK, list)
+}
+
 func (a *PublicAPI) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	var inquiry models.BookingInquiry
 	if err := json.NewDecoder(r.Body).Decode(&inquiry); err != nil {
@@ -150,7 +173,7 @@ func (a *PublicAPI) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusCreated, models.BookingResponse{
 		ID:      id,
-		Message: "Thank you! We will confirm your appointment via WhatsApp shortly.",
+		Message: "Thank you! We will confirm your request via WhatsApp shortly.",
 	})
 }
 
@@ -160,20 +183,21 @@ func (a *PublicAPI) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-
+	if req.Name == "" {
+		req.Name = strings.TrimSpace(req.CustomerName)
+	}
+	if req.Phone == "" {
+		req.Phone = strings.TrimSpace(req.CustomerPhone)
+	}
+	if req.Email == "" {
+		req.Email = strings.TrimSpace(req.CustomerEmail)
+	}
 	req.Name = strings.TrimSpace(req.Name)
 	req.Phone = strings.TrimSpace(req.Phone)
-	req.Email = strings.TrimSpace(req.Email)
 	req.ServiceSlug = strings.TrimSpace(req.ServiceSlug)
-	req.Size = strings.TrimSpace(req.Size)
-	req.MpesaPhone = strings.TrimSpace(req.MpesaPhone)
-	req.OfflineChannel = strings.TrimSpace(req.OfflineChannel)
-	req.PaymentReference = strings.TrimSpace(req.PaymentReference)
-	req.Notes = strings.TrimSpace(req.Notes)
 	req.PaymentMethod = strings.TrimSpace(req.PaymentMethod)
-
 	if req.Name == "" || req.Phone == "" || req.ServiceSlug == "" {
-		writeError(w, http.StatusBadRequest, "name, phone, and service are required")
+		writeError(w, http.StatusBadRequest, "name, phone, and item are required")
 		return
 	}
 	if req.Quantity <= 0 {
@@ -181,82 +205,65 @@ func (a *PublicAPI) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	svc, ok, err := a.repo.ServiceBySlug(r.Context(), req.ServiceSlug)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to load service")
-		return
-	}
-	if !ok {
-		writeError(w, http.StatusNotFound, "service not found")
+	if err != nil || !ok {
+		writeError(w, http.StatusBadRequest, "selected item was not found")
 		return
 	}
 
 	site, err := a.repo.Site(r.Context())
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to load site")
+		writeError(w, http.StatusInternalServerError, "could not load site settings")
 		return
 	}
 
 	amount := svc.PriceKES * req.Quantity
-	status := "pending"
-	message := "Order received. We will confirm shortly."
-	var whatsAppURL string
+	status := "pending_offline"
+	message := "Your inquiry has been received. Our team will contact you shortly."
+	whatsAppURL := ""
 
 	switch req.PaymentMethod {
-	case "mpesa_stk":
-		mpesaPhone := req.MpesaPhone
-		if mpesaPhone == "" {
-			mpesaPhone = req.Phone
-		}
-		req.MpesaPhone = mpesaPhone
-		status = "stk_initiated"
-		message = fmt.Sprintf(
-			"M-Pesa STK push sent to %s for KES %d. Enter your M-Pesa PIN on your phone to complete payment.",
-			mpesaPhone, amount,
-		)
-	case "offline_till", "offline_paybill":
-		if req.PaymentReference == "" {
-			writeError(w, http.StatusBadRequest, "payment reference is required for offline payment")
-			return
-		}
-		channel := req.OfflineChannel
-		if channel == "" {
-			if req.PaymentMethod == "offline_till" {
-				channel = "till"
-			} else {
-				channel = "paybill"
-			}
-		}
-		req.OfflineChannel = channel
-		status = "awaiting_confirmation"
-		if channel == "till" {
-			message = fmt.Sprintf(
-				"Thank you! We received your order. Pay KES %d to Till %s, then we will verify reference %s.",
-				amount, site.Payment.TillNumber, req.PaymentReference,
-			)
-		} else {
-			message = fmt.Sprintf(
-				"Thank you! We received your order. Pay KES %d to Paybill %s (Account: %s), then we will verify reference %s.",
-				amount, site.Payment.PaybillNumber, site.Payment.PaybillAccount, req.PaymentReference,
-			)
-		}
 	case "whatsapp":
-		status = "whatsapp_redirect"
-		msg := buildWhatsAppOrderMessage(site.BrandName, svc, req, amount)
-		whatsAppURL = appendWhatsAppMessage(site.WhatsAppURL, msg)
-		message = "Opening WhatsApp to complete your order with our team."
+		status = "pending_whatsapp"
+		message = "Order inquiry noted. Opening WhatsApp to finalize sizing & delivery."
+		whatsAppURL = appendWhatsAppMessage(site.WhatsAppURL,
+			buildWhatsAppOrderMessage(site.BrandName, svc, req, amount))
+	case "delivery":
+		status = "pending_delivery"
+		message = "Order recorded for pay on delivery. We will call you to confirm dispatch."
+	case "mpesa_express":
+		status = "pending_payment"
+		message = "Prompt sent. Please complete payment on your phone."
+	case "offline":
+		status = "pending_offline"
+		message = "Order received. Please complete payment using the provided till or paybill."
 	default:
-		writeError(w, http.StatusBadRequest, "invalid payment method")
-		return
+		req.PaymentMethod = "whatsapp"
+		status = "pending_whatsapp"
+		message = "Order recorded. Opening WhatsApp to connect."
+		whatsAppURL = appendWhatsAppMessage(site.WhatsAppURL,
+			buildWhatsAppOrderMessage(site.BrandName, svc, req, amount))
 	}
 
-	id, err := a.repo.AddOrder(r.Context(), models.OrderRecord{
-		Name: req.Name, Phone: req.Phone, Email: req.Email,
-		ServiceSlug: svc.Slug, ServiceName: svc.Name, Size: req.Size, Quantity: req.Quantity,
-		AmountKES: amount, PaymentMethod: req.PaymentMethod, MpesaPhone: req.MpesaPhone,
-		OfflineChannel: req.OfflineChannel, PaymentReference: req.PaymentReference,
-		Status: status, Notes: req.Notes,
-	})
+	orderRecord := models.OrderRecord{
+		Name:             req.Name,
+		Phone:            req.Phone,
+		Email:            req.Email,
+		ServiceSlug:      svc.Slug,
+		ServiceName:      svc.Name,
+		Size:             req.Size,
+		Quantity:         req.Quantity,
+		AmountKES:        amount,
+		PaymentMethod:    req.PaymentMethod,
+		MpesaPhone:       req.MpesaPhone,
+		OfflineChannel:   req.OfflineChannel,
+		PaymentReference: req.PaymentReference,
+		Status:           status,
+		Notes:            req.Notes,
+	}
+
+	id, err := a.repo.AddOrder(r.Context(), orderRecord)
 	if err != nil {
+		log.Printf("create order: %v", err)
 		writeError(w, http.StatusInternalServerError, "could not save order")
 		return
 	}
@@ -268,11 +275,11 @@ func (a *PublicAPI) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 func buildWhatsAppOrderMessage(brand string, svc models.LashService, req models.OrderRequest, amount int) string {
 	lines := []string{
-		fmt.Sprintf("Hi %s, I'd like to place an order:", brand),
-		fmt.Sprintf("• Style: %s", svc.Name),
-		fmt.Sprintf("• Size: %s", fallback(req.Size, "TBC")),
+		fmt.Sprintf("Hi %s, I'd like to place an inquiry/order:", brand),
+		fmt.Sprintf("• Item: %s", svc.Name),
+		fmt.Sprintf("• Option/Spec: %s", fallback(req.Size, "Standard")),
 		fmt.Sprintf("• Qty: %d", req.Quantity),
-		fmt.Sprintf("• Total: KES %d", amount),
+		fmt.Sprintf("• Amount: %s %d", svc.Currency, amount),
 		fmt.Sprintf("• Name: %s", req.Name),
 		fmt.Sprintf("• Phone: %s", req.Phone),
 	}

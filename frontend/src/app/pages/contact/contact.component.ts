@@ -10,24 +10,28 @@ import { BookingFormComponent } from '../../shared/booking-form/booking-form.com
   standalone: true,
   imports: [AsyncPipe, PageHeroComponent, BookingFormComponent],
   template: `
-    <app-page-hero
-      eyebrow="◆ Contact"
-      title="Order Your <span class='accent'>Perfect Pair</span>"
-      subtitle="Request a style online or message us on WhatsApp for sizing help"
-    />
     @if (vm$ | async; as vm) {
+      <app-page-hero
+        eyebrow="◆ Client Services"
+        [title]="'Connect With ' + vm.site.brandName + ' <span class=\\'accent\\'>Concierge</span>'"
+        subtitle="Submit an inquiry or order request online, or message our private client team on WhatsApp"
+      />
       <section class="page-section contact-grid">
-        <div class="info">
-          <h2>Visit the showroom</h2>
+        <div class="info-card">
+          <h2>Showroom & Location</h2>
           <p>{{ vm.site.studioAddress }}</p>
-          <p>{{ vm.site.location }}</p>
-          <h2>Reach us</h2>
+          <p class="loc-sub">{{ vm.site.location }}</p>
+
+          <h2>Direct Communications</h2>
           <p><a [href]="telHref(vm.site.phone)">{{ vm.site.phone }}</a></p>
           <p><a [href]="'mailto:' + vm.site.email">{{ vm.site.email }}</a></p>
-          <a class="whatsapp" [href]="vm.site.whatsAppUrl" target="_blank" rel="noopener">Chat on WhatsApp</a>
+
+          <a class="whatsapp" [href]="vm.site.whatsAppUrl" target="_blank" rel="noopener">
+            💬 Connect on WhatsApp
+          </a>
         </div>
         <div class="form-wrap">
-          <h2>Send an order inquiry</h2>
+          <h2>Send an inquiry or reservation</h2>
           <app-booking-form [services]="vm.services" />
         </div>
       </section>
@@ -36,46 +40,77 @@ import { BookingFormComponent } from '../../shared/booking-form/booking-form.com
   styles: [
     `
       .page-section {
-        max-width: 1000px;
+        max-width: 1100px;
         margin: 0 auto;
-        padding: 2rem var(--page-gutter) 4rem;
+        padding: 2.5rem var(--page-gutter) 4.5rem;
         display: grid;
         gap: 2rem;
       }
       @media (min-width: 768px) {
         .contact-grid {
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: 1fr 1.2fr;
+          align-items: start;
         }
+      }
+      .info-card {
+        background: var(--color-surface);
+        color: var(--color-text);
+        padding: clamp(1.5rem, 4vw, 2rem);
+        border-radius: 20px;
+        border: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent);
       }
       h2 {
         font-family: var(--font-heading);
-        font-size: 1.25rem;
-        margin: 1.25rem 0 0.5rem;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--color-text);
+        margin: 1.5rem 0 0.5rem;
         &:first-child {
           margin-top: 0;
         }
       }
+      p {
+        margin: 0.25rem 0;
+        color: var(--color-text-muted);
+      }
+      .loc-sub {
+        color: var(--color-accent);
+        font-weight: 600;
+      }
       a {
-        color: var(--color-primary);
+        color: var(--color-accent);
+        text-decoration: none;
+        font-weight: 600;
+        &:hover {
+          text-decoration: underline;
+        }
       }
       .whatsapp {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 44px;
-        margin-top: 1rem;
-        padding: 0.75rem 1.25rem;
+        min-height: 48px;
+        margin-top: 1.5rem;
+        padding: 0.85rem 1.5rem;
         background: #25d366;
-        color: #fff !important;
+        color: #ffffff !important;
         border-radius: 999px;
-        text-decoration: none;
-        font-weight: 600;
+        text-decoration: none !important;
+        font-weight: 700;
+        box-shadow: 0 4px 14px rgba(37, 211, 102, 0.3);
+        transition: transform 0.2s, opacity 0.2s;
+
+        &:hover {
+          opacity: 0.94;
+          transform: translateY(-1px);
+        }
       }
       .form-wrap {
         background: var(--color-surface);
-        padding: clamp(1.25rem, 4vw, 1.5rem);
+        color: var(--color-text);
+        padding: clamp(1.5rem, 4vw, 2rem);
         border-radius: 20px;
-        border: 1px solid rgba(26, 31, 59, 0.1);
+        border: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent);
       }
     `,
   ],

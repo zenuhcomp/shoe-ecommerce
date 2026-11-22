@@ -52,7 +52,7 @@ func (r *ContentRepo) BackfillSitePayment(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if site.Payment.TillNumber != "" {
+	if site.Payment.ShortCode != "" || site.Payment.ConsumerKey != "" || site.Payment.CashInstructions != "" || site.Payment.TillNumber != "" {
 		return nil
 	}
 	def := defaultSiteConfig()

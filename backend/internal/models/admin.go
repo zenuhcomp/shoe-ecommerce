@@ -3,12 +3,12 @@ package models
 import "time"
 
 type AdminUser struct {
-	ID           string    `json:"id"`
-	Email        string    `json:"email"`
-	DisplayName  string    `json:"displayName"`
-	Role         string    `json:"role"`
-	CreatedAt    time.Time `json:"createdAt"`
-	UpdatedAt    time.Time `json:"updatedAt"`
+	ID          string    `json:"id"`
+	Email       string    `json:"email"`
+	DisplayName string    `json:"displayName"`
+	Role        string    `json:"role"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 type LoginRequest struct {
@@ -41,18 +41,24 @@ type ReorderIntRequest struct {
 }
 
 type OrderRecord struct {
-	Name             string
-	Phone            string
-	Email            string
-	ServiceSlug      string
-	ServiceName      string
-	Size             string
-	Quantity         int
-	AmountKES        int
-	PaymentMethod    string
-	MpesaPhone       string
-	OfflineChannel   string
-	PaymentReference string
-	Status           string
-	Notes            string
+	ID               string    `json:"id"`
+	Name             string    `json:"name"`
+	Phone            string    `json:"phone"`
+	Email            string    `json:"email,omitempty"`
+	ServiceSlug      string    `json:"serviceSlug"`
+	ServiceName      string    `json:"serviceName"`
+	Size             string    `json:"size,omitempty"`
+	Quantity         int       `json:"quantity"`
+	AmountKES        int       `json:"amountKes"`
+	PaymentMethod    string    `json:"paymentMethod"`
+	MpesaPhone       string    `json:"mpesaPhone,omitempty"`
+	OfflineChannel   string    `json:"offlineChannel,omitempty"`
+	PaymentReference string    `json:"paymentReference,omitempty"`
+	Status           string    `json:"status"`
+	Notes            string    `json:"notes,omitempty"`
+	CreatedAt        time.Time `json:"createdAt"`
+}
+
+type UpdateOrderStatusRequest struct {
+	Status string `json:"status"`
 }

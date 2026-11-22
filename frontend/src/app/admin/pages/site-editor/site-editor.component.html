@@ -1,10 +1,10 @@
 <div class="page-header">
   <div>
-    <h1>Site settings</h1>
-    <p>Branding, hero, contact, theme, and page copy</p>
+    <h1>Branding, Theme & Settings</h1>
+    <p>Configure brand identity, video hero, color palette, typography, and motion engine</p>
   </div>
   <button type="button" class="btn primary" (click)="save()" [disabled]="saving()">
-    {{ saving() ? 'Saving…' : 'Save all changes' }}
+    {{ saving() ? 'Saving…' : 'Save all changes ✓' }}
   </button>
 </div>
 
@@ -13,9 +13,9 @@
 }
 
 <div class="tabs">
-  @for (tab of ['brand', 'hero', 'contact', 'theme', 'about', 'house', 'aftercare', 'pricing']; track tab) {
+  @for (tab of ['brand', 'hero', 'theme', 'animations', 'contact', 'about', 'house', 'aftercare', 'pricing']; track tab) {
     <button type="button" [class.active]="activeTab() === tab" (click)="activeTab.set(tab)">
-      {{ tab }}
+      {{ tab | uppercase }}
     </button>
   }
 </div>
@@ -23,62 +23,124 @@
 <form [formGroup]="form" class="card editor">
   @if (activeTab() === 'brand') {
     <div class="row">
-      <label>Brand name <input formControlName="brandName" /></label>
-      <label>Brand script <input formControlName="brandScript" /></label>
-      <label>Tagline <input formControlName="tagline" /></label>
-      <label>Announcement bar <input formControlName="announcement" /></label>
-      <label>Price range label <input formControlName="priceRange" /></label>
+      <label>Industry Mode <input formControlName="industry" placeholder="furniture, vehicles, spa, beauty, footwear, custom" /></label>
+      <label>Brand Name <input formControlName="brandName" /></label>
+      <label>Brand Script / Logo Subtitle <input formControlName="brandScript" /></label>
+      <label>Logo Image URL <input formControlName="logoUrl" placeholder="https://..." /></label>
+      <label class="full">Tagline <input formControlName="tagline" /></label>
+      <label class="full">Announcement Bar <input formControlName="announcement" /></label>
+      <label>Price Range Label <input formControlName="priceRange" /></label>
       <label>Copyright <input formControlName="copyright" /></label>
-      <label class="full">Meta description <textarea formControlName="metaDescription"></textarea></label>
+      <label class="full">Meta Description (SEO) <textarea rows="2" formControlName="metaDescription"></textarea></label>
     </div>
   }
 
   @if (activeTab() === 'hero') {
     <div class="row">
-      <label>Hero badge <input formControlName="heroBadge" /></label>
-      <label>Hero title <input formControlName="heroTitle" /></label>
-      <label class="full">Hero subtitle <input formControlName="heroSubtitle" /></label>
-    </div>
-  }
-
-  @if (activeTab() === 'contact') {
-    <div class="row">
-      <label>Location <input formControlName="location" /></label>
-      <label>Studio address <input formControlName="studioAddress" /></label>
-      <label>Phone <input formControlName="phone" /></label>
-      <label>Email <input formControlName="email" /></label>
-      <label>WhatsApp URL <input formControlName="whatsAppUrl" /></label>
-      <label>Instagram <input formControlName="instagramUrl" /></label>
-      <label>TikTok <input formControlName="tiktokUrl" /></label>
+      <label>Hero Badge Pill <input formControlName="heroBadge" /></label>
+      <label class="full">Hero Title (Main Headline) <input formControlName="heroTitle" /></label>
+      <label class="full">Hero Subtitle <textarea rows="2" formControlName="heroSubtitle"></textarea></label>
+      <label>Hero Background Type
+        <select formControlName="heroBackgroundType">
+          <option value="video">Direct Video (MP4 / WebM)</option>
+          <option value="gradient">Theme Hero Gradient</option>
+          <option value="image">Static Image</option>
+          <option value="color">Solid Background Color</option>
+        </select>
+      </label>
+      <label>Hero Video URL (MP4 / WebM) <input formControlName="heroVideoUrl" placeholder="https://.../hero.mp4" /></label>
+      <label>Dark Overlay Darkness: {{ form.get('heroOverlayOpacity')?.value }}%
+        <input type="range" min="0" max="90" step="5" formControlName="heroOverlayOpacity" />
+      </label>
     </div>
   }
 
   @if (activeTab() === 'theme') {
     <div class="row" formGroupName="theme">
-      @for (key of ['primary', 'primaryDark', 'accent', 'accentLight', 'background', 'surface', 'text', 'textMuted']; track key) {
-        <label>{{ key }} <input [formControlName]="key" type="color" /></label>
-      }
-      <label class="full">Hero gradient <input formControlName="heroGradient" /></label>
-      <label>Heading font <input formControlName="fontHeading" /></label>
-      <label>Body font <input formControlName="fontBody" /></label>
-      <label>Script font <input formControlName="fontScript" /></label>
+      <label>Primary (Nav / Headers) <input formControlName="primary" type="color" /></label>
+      <label>Primary Dark (Deep BG) <input formControlName="primaryDark" type="color" /></label>
+      <label>Accent (Buttons / Highlights) <input formControlName="accent" type="color" /></label>
+      <label>Accent Light (Badges) <input formControlName="accentLight" type="color" /></label>
+      <label>Page Background <input formControlName="background" type="color" /></label>
+      <label>Card Surface <input formControlName="surface" type="color" /></label>
+      <label>Text Main <input formControlName="text" type="color" /></label>
+      <label>Text Muted <input formControlName="textMuted" type="color" /></label>
+      <label class="full">Hero Gradient CSS <input formControlName="heroGradient" placeholder="linear-gradient(...)" /></label>
+      <label>Heading Font
+        <select formControlName="fontHeading">
+          <option value="'Playfair Display', Georgia, serif">Playfair Display (Luxury & Beauty)</option>
+          <option value="'Montserrat', system-ui, sans-serif">Montserrat (Automotive & High-Tech)</option>
+          <option value="'Cormorant Garamond', Georgia, serif">Cormorant Garamond (Spa & Artisanal)</option>
+          <option value="'Cinzel', Georgia, serif">Cinzel (Regal & Prestige)</option>
+          <option value="'Inter', system-ui, sans-serif">Inter (Modern & Clean)</option>
+          <option value="'DM Sans', system-ui, sans-serif">DM Sans (Minimalist & Contemporary)</option>
+        </select>
+      </label>
+      <label>Body Font
+        <select formControlName="fontBody">
+          <option value="'DM Sans', system-ui, sans-serif">DM Sans</option>
+          <option value="'Inter', system-ui, sans-serif">Inter</option>
+          <option value="system-ui, -apple-system, sans-serif">System Sans-Serif</option>
+        </select>
+      </label>
+      <label>Script / Accent Font <input formControlName="fontScript" /></label>
+    </div>
+  }
+
+  @if (activeTab() === 'animations') {
+    <div class="row" formGroupName="animations">
+      <label class="check">
+        <input type="checkbox" formControlName="globalEnabled" /> Enable Global Animations
+      </label>
+      <label class="check">
+        <input type="checkbox" formControlName="scrollReveal" /> Scroll-Triggered Entrance Effects
+      </label>
+      <label>Animation Intensity
+        <select formControlName="intensity">
+          <option value="subtle">Subtle (Calm & Elegant)</option>
+          <option value="balanced">Balanced (Recommended)</option>
+          <option value="energetic">Energetic (Dynamic & Snappy)</option>
+          <option value="off">Off (Zero Motion)</option>
+        </select>
+      </label>
+      <label>Default Transition Duration <input formControlName="defaultDuration" placeholder="0.8s" /></label>
+      <label>Card Hover Effect
+        <select formControlName="cardHoverEffect">
+          <option value="lift">Lift & Elevation Shadow</option>
+          <option value="glow">Accent Color Glow</option>
+          <option value="scale">Subtle Scale Up</option>
+          <option value="none">None</option>
+        </select>
+      </label>
+    </div>
+  }
+
+  @if (activeTab() === 'contact') {
+    <div class="row">
+      <label>Showroom / Location <input formControlName="location" /></label>
+      <label>Physical Address <input formControlName="studioAddress" /></label>
+      <label>Phone <input formControlName="phone" /></label>
+      <label>Email <input formControlName="email" /></label>
+      <label class="full">WhatsApp Direct URL <input formControlName="whatsAppUrl" /></label>
+      <label>Instagram URL <input formControlName="instagramUrl" /></label>
+      <label>TikTok URL <input formControlName="tiktokUrl" /></label>
     </div>
   }
 
   @if (activeTab() === 'about') {
     <div formGroupName="about">
       <div class="row">
-        <label>Section title <input formControlName="title" /></label>
-        <label>Artist name <input formControlName="artistName" /></label>
-        <label>Artist title <input formControlName="artistTitle" /></label>
-        <label class="full">Intro <input formControlName="intro" /></label>
-        <label class="full">Story <textarea formControlName="story"></textarea></label>
+        <label>Section Title <input formControlName="title" /></label>
+        <label>Founder / Specialist Name <input formControlName="artistName" /></label>
+        <label>Title / Credential <input formControlName="artistTitle" /></label>
+        <label class="full">Intro Summary <input formControlName="intro" /></label>
+        <label class="full">Brand Story <textarea rows="4" formControlName="story"></textarea></label>
       </div>
-      <h3>Highlights</h3>
+      <h3>Key Highlights</h3>
       <div formArrayName="highlights">
         @for (c of highlights().controls; track $index) {
           <label>
-            Bullet {{ $index + 1 }}
+            Highlight #{{ $index + 1 }}
             <input [formControlName]="$index" />
           </label>
         }
@@ -90,13 +152,13 @@
   @if (activeTab() === 'house') {
     <div formGroupName="houseCalls">
       <div class="row">
-        <label>Title <input formControlName="title" /></label>
-        <label class="full">Description <textarea formControlName="description"></textarea></label>
+        <label class="full">Title <input formControlName="title" /></label>
+        <label class="full">Description <textarea rows="3" formControlName="description"></textarea></label>
       </div>
-      <h3>Notes</h3>
+      <h3>Delivery / Concierge Notes</h3>
       <div formArrayName="notes">
         @for (c of houseNotes().controls; track $index) {
-          <label>Note {{ $index + 1 }} <input [formControlName]="$index" /></label>
+          <label>Note #{{ $index + 1 }} <input [formControlName]="$index" /></label>
         }
       </div>
       <button type="button" class="btn ghost" (click)="addHouseNote()">+ Add note</button>
@@ -106,15 +168,15 @@
   @if (activeTab() === 'aftercare') {
     <div formGroupName="aftercare">
       <div class="row">
-        <label>Title <input formControlName="title" /></label>
-        <label class="full">Intro <textarea formControlName="intro"></textarea></label>
+        <label class="full">Title <input formControlName="title" /></label>
+        <label class="full">Intro <textarea rows="2" formControlName="intro"></textarea></label>
       </div>
-      <h3>Tips</h3>
+      <h3>Care & Maintenance Tips</h3>
       <div formArrayName="tips">
-        @for (tip of tips().controls; track $index) {
-          <div class="row" [formGroupName]="$index">
-            <label>Tip title <input formControlName="title" /></label>
-            <label class="full">Description <textarea formControlName="description"></textarea></label>
+        @for (g of tips().controls; track $index) {
+          <div [formGroupName]="$index" class="tip-row">
+            <label>Tip Title <input formControlName="title" /></label>
+            <label class="full">Description <textarea rows="2" formControlName="description"></textarea></label>
           </div>
         }
       </div>
@@ -123,15 +185,15 @@
   }
 
   @if (activeTab() === 'pricing') {
-    <div class="row" formGroupName="pricingHighlight">
-      <label>Title <input formControlName="title" /></label>
-      <label>Subtitle <input formControlName="subtitle" /></label>
-      <label>From (KES) <input formControlName="priceFrom" type="number" /></label>
-      <label>To (KES) <input formControlName="priceTo" type="number" /></label>
-      <label>Currency <input formControlName="currency" /></label>
+    <div formGroupName="pricingHighlight" class="row">
+      <label>Highlight Title <input formControlName="title" /></label>
       <label>Badge <input formControlName="badge" /></label>
-      <label class="full">Includes <textarea formControlName="includes"></textarea></label>
-      <label class="full">Studio note <input formControlName="studioNote" /></label>
+      <label>Price From <input formControlName="priceFrom" type="number" /></label>
+      <label>Price To <input formControlName="priceTo" type="number" /></label>
+      <label>Currency <input formControlName="currency" /></label>
+      <label class="full">Subtitle <input formControlName="subtitle" /></label>
+      <label class="full">Inclusions Summary <input formControlName="includes" /></label>
+      <label class="full">Showroom Note <input formControlName="studioNote" /></label>
     </div>
   }
 </form>

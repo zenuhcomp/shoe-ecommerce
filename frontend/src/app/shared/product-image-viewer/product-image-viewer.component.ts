@@ -2,7 +2,7 @@ import { DecimalPipe } from '@angular/common';
 import { Component, HostListener, Input, computed, signal } from '@angular/core';
 import { WebpImagePipe } from '../webp-image.pipe';
 
-type ViewerMode = 'gallery' | '3d';
+type ViewerMode = 'gallery' | '3d' | 'video';
 
 @Component({
   selector: 'app-product-image-viewer',
@@ -13,7 +13,8 @@ type ViewerMode = 'gallery' | '3d';
 })
 export class ProductImageViewerComponent {
   @Input({ required: true }) alt = 'Product image';
-  @Input() emoji = '👠';
+  @Input() emoji = '✨';
+  @Input() videoUrl?: string;
   @Input() set images(value: string[] | undefined) {
     const list = (value ?? []).filter(Boolean);
     this.imageList.set(list.length ? list : []);
@@ -43,6 +44,7 @@ export class ProductImageViewerComponent {
 
   hasImages = computed(() => this.imageList().length > 0);
   has3d = computed(() => this.frames360().length > 1);
+  hasVideo = computed(() => !!this.videoUrl);
 
   currentGallerySrc = computed(() => {
     const imgs = this.imageList();
@@ -78,6 +80,7 @@ export class ProductImageViewerComponent {
   }
 
   onWheel(event: WheelEvent): void {
+    if (this.mode() === 'video') return;
     event.preventDefault();
     if (event.deltaY < 0) {
       this.zoomIn();
@@ -110,7 +113,7 @@ export class ProductImageViewerComponent {
 
   @HostListener('document:keydown', ['$event'])
   onKey(event: KeyboardEvent): void {
-    if (!this.hasImages()) return;
+    if (!this.hasImages() || this.mode() === 'video') return;
     if (event.key === '+' || event.key === '=') this.zoomIn();
     if (event.key === '-') this.zoomOut();
   }

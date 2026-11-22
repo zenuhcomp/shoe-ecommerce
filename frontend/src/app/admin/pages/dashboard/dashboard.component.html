@@ -1,15 +1,43 @@
 <div class="page-header">
   <div>
-    <h1>Dashboard</h1>
-    <p>Overview of your Luna Collections storefront</p>
+    <h1>CMS Dashboard</h1>
+    <p>Adaptive e-commerce management for <strong>{{ site()?.brandName || 'Storefront' }}</strong></p>
   </div>
-  <a routerLink="/admin/site" class="btn primary">Edit site settings</a>
+  <div class="header-actions">
+    <a routerLink="/admin/presets" class="btn outline">◇ Switch Preset</a>
+    <a routerLink="/admin/sections" class="btn primary">⊞ Edit Sections</a>
+  </div>
 </div>
 
+@if (site(); as s) {
+  <div class="preset-banner card">
+    <div class="banner-left">
+      <span class="industry-badge">◆ {{ s.industry || 'custom' | uppercase }} INDUSTRY</span>
+      <h3>{{ s.brandName }}<em>{{ s.brandScript ? ' ' + s.brandScript : '' }}</em></h3>
+      <p class="tagline">{{ s.tagline }}</p>
+    </div>
+    <div class="banner-right">
+      <a routerLink="/admin/presets" class="btn outline">Change Industry Preset →</a>
+    </div>
+  </div>
+}
+
 <div class="stats">
+  <a routerLink="/admin/sections" class="stat card">
+    <span class="num">{{ counts()['sections'] ?? 0 }}</span>
+    <span>Page Sections</span>
+  </a>
   <a routerLink="/admin/services" class="stat card">
     <span class="num">{{ counts()['services'] ?? 0 }}</span>
-    <span>Shoe styles</span>
+    <span>Catalog Items</span>
+  </a>
+  <a routerLink="/admin/media" class="stat card">
+    <span class="num">{{ counts()['media'] ?? 0 }}</span>
+    <span>Media Assets</span>
+  </a>
+  <a routerLink="/admin/orders" class="stat card">
+    <span class="num">{{ (counts()['orders'] ?? 0) + (counts()['bookings'] ?? bookings().length) }}</span>
+    <span>Inquiries & Orders</span>
   </a>
   <a routerLink="/admin/reviews" class="stat card">
     <span class="num">{{ counts()['reviews'] ?? 0 }}</span>
@@ -17,41 +45,70 @@
   </a>
   <a routerLink="/admin/faq" class="stat card">
     <span class="num">{{ counts()['faq'] ?? 0 }}</span>
-    <span>FAQ items</span>
+    <span>FAQ Items</span>
   </a>
   <a routerLink="/admin/gallery" class="stat card">
     <span class="num">{{ counts()['gallery'] ?? 0 }}</span>
-    <span>Gallery</span>
+    <span>Gallery Items</span>
+  </a>
+  <a routerLink="/admin/features" class="stat card">
+    <span class="num">{{ counts()['features'] ?? 0 }}</span>
+    <span>Features</span>
   </a>
 </div>
 
-<section class="card">
-  <h2>Recent order inquiries</h2>
-  @if (bookings().length === 0) {
-    <p class="empty">No inquiries yet.</p>
+<section class="card recent-section">
+  <div class="section-title-row">
+    <h2>Recent Orders & Inquiries</h2>
+    <a routerLink="/admin/orders" class="link">View all in CRM →</a>
+  </div>
+
+  @if (orders().length === 0 && bookings().length === 0) {
+    <p class="empty">No inquiries or orders recorded yet.</p>
   } @else {
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>Name</th>
+            <th>Type</th>
+            <th>Customer</th>
             <th>Phone</th>
-            <th>Style</th>
-            <th>When</th>
+            <th>Item / Details</th>
+            <th>Date</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
+          @for (o of orders(); track o.id) {
+            <tr>
+              <td><span class="pill order-pill">Order</span></td>
+              <td><strong>{{ o.name }}</strong></td>
+              <td>{{ o.phone }}</td>
+              <td>{{ o.serviceName }} (KES {{ o.amountKes | number }})</td>
+              <td>{{ o.createdAt | date: 'MMM d, h:mm a' }}</td>
+              <td>
+                <a class="wa-btn-sm" [href]="getWhatsAppReply(o.phone, o.name)" target="_blank" rel="noopener">
+                  💬 Reply
+                </a>
+              </td>
+            </tr>
+          }
           @for (b of bookings(); track b.id) {
             <tr>
-              <td>{{ b.name }}</td>
+              <td><span class="pill booking-pill">Inquiry</span></td>
+              <td><strong>{{ b.name }}</strong></td>
               <td>{{ b.phone }}</td>
-              <td>{{ b.serviceSlug || '—' }}</td>
-              <td>{{ b.createdAt | date: 'medium' }}</td>
+              <td>{{ b.serviceSlug || 'General Question' }}</td>
+              <td>{{ b.createdAt | date: 'MMM d, h:mm a' }}</td>
+              <td>
+                <a class="wa-btn-sm" [href]="getWhatsAppReply(b.phone, b.name)" target="_blank" rel="noopener">
+                  💬 Reply
+                </a>
+              </td>
             </tr>
           }
         </tbody>
       </table>
     </div>
-    <a routerLink="/admin/bookings" class="link">View all inquiries →</a>
   }
 </section>

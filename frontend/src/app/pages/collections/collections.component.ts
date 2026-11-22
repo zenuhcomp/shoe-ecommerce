@@ -10,12 +10,12 @@ import { ServiceGridComponent } from '../../shared/service-grid/service-grid.com
   standalone: true,
   imports: [AsyncPipe, PageHeroComponent, ServiceGridComponent],
   template: `
-    <app-page-hero
-      eyebrow="◆ Our Collections"
-      title="Ladies Official <span class='accent'>Shoes</span>"
-      subtitle="Every style selected for comfort, polish, and professional dress codes"
-    />
     @if (vm$ | async; as vm) {
+      <app-page-hero
+        [eyebrow]="'◆ ' + (vm.site.brandName || 'Store') + ' Catalog'"
+        [title]="(vm.site.brandName || 'Curated') + ' <span class=\\'accent\\'>Collection</span>'"
+        [subtitle]="vm.site.tagline || 'Explore verified specifications, 360° interactive views, and immediate ordering'"
+      />
       <section class="page-section">
         <app-service-grid [services]="vm.services" [site]="vm.site" />
       </section>
