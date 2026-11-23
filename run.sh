@@ -30,11 +30,30 @@ FRONTEND_PORT="${FRONTEND_PORT:-${frontend_port:-4204}}"
 BACKEND_PORT="${BACKEND_PORT:-${backend_port:-8084}}"
 DATABASE_MODE="${DATABASE_MODE:-${database_mode:-test}}"
 FRONTEND_DIST_DIR="${FRONTEND_DIST_DIR:-$FRONTEND_DIR/dist/frontend/browser}"
+
+# Parse optional arguments
+for arg in "$@"; do
+  case "$arg" in
+    --static) SERVE_STATIC=1 ;;
+    --dev)    SERVE_STATIC=0 ;;
+  esac
+done
+
+# Detect if running under systemd
+IS_SYSTEMD=0
+if [[ -n "${INVOCATION_ID:-}" || -n "${JOURNAL_STREAM:-}" || -n "${SYSTEMD_EXEC_PID:-}" ]]; then
+  IS_SYSTEMD=1
+fi
+
 SERVE_STATIC="${SERVE_STATIC:-${serve_static:-}}"
 if [[ -z "$SERVE_STATIC" ]]; then
-  SERVE_STATIC=0
-  if [[ -f "$FRONTEND_DIST_DIR/index.html" && ! -x "$FRONTEND_DIR/node_modules/.bin/ng" ]]; then
+  # In production, under systemd, or when compiled frontend dist exists, default to static production mode
+  if [[ "${APP_ENV:-}" == "production" || "$IS_SYSTEMD" == "1" ]]; then
     SERVE_STATIC=1
+  elif [[ -f "$FRONTEND_DIST_DIR/index.html" && ! -x "$FRONTEND_DIR/node_modules/.bin/ng" ]]; then
+    SERVE_STATIC=1
+  else
+    SERVE_STATIC=0
   fi
 fi
 
@@ -44,9 +63,10 @@ export FRONTEND_PORT
 export DATABASE_MODE
 export ENV_FILE
 export FRONTEND_DIST_DIR
+export SERVE_STATIC
 
 if [[ -z "${CORS_ORIGINS:-}" ]]; then
-  export CORS_ORIGINS="http://localhost:${FRONTEND_PORT},http://127.0.0.1:${FRONTEND_PORT}"
+  export CORS_ORIGINS="http://localhost:${FRONTEND_PORT},http://127.0.0.1:${FRONTEND_PORT},http://localhost:${BACKEND_PORT},http://127.0.0.1:${BACKEND_PORT}"
 fi
 
 stop_process() {
@@ -54,8 +74,8 @@ stop_process() {
   local label="$2"
   if [[ -f "$pid_file" ]]; then
     local pid
-    pid="$(cat "$pid_file")"
-    if kill -0 "$pid" 2>/dev/null; then
+    pid="$(cat "$pid_file" 2>/dev/null || true)"
+    if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
       echo "Stopping $label (pid $pid)..."
       kill "$pid" 2>/dev/null || true
       wait "$pid" 2>/dev/null || true
@@ -66,13 +86,13 @@ stop_process() {
 
 cleanup() {
   echo ""
-  echo "Shutting down..."
+  echo "Shutting down Luna Collections stack..."
   stop_process "$PID_FRONTEND" "frontend"
   stop_process "$PID_BACKEND" "backend"
   exit 0
 }
 
-trap cleanup INT TERM
+trap cleanup INT TERM HUP
 
 stop_process "$PID_FRONTEND" "frontend"
 stop_process "$PID_BACKEND" "backend"
@@ -87,22 +107,58 @@ cat > "$PROXY_FILE" <<EOF
 EOF
 
 echo "=============================================="
-echo " Luna Collections — dev stack"
+if [[ "$SERVE_STATIC" == "1" ]]; then
+  echo " Luna Collections — production / static stack"
+else
+  echo " Luna Collections — dev stack"
+fi
 echo "=============================================="
 echo " Env file       : $ENV_FILE"
 echo " DATABASE_MODE  : $DATABASE_MODE"
 echo " Backend        : http://localhost:${BACKEND_PORT}"
 if [[ "$SERVE_STATIC" == "1" ]]; then
-  echo " Frontend       : http://localhost:${BACKEND_PORT} (static)"
+  echo " Frontend       : http://localhost:${BACKEND_PORT} (static SPA)"
   echo " Frontend dist  : $FRONTEND_DIST_DIR"
 else
   echo " Frontend       : http://localhost:${FRONTEND_PORT}"
-fi
-if [[ "$SERVE_STATIC" != "1" ]]; then
   echo " API proxy      : $PROXY_FILE"
 fi
 echo "=============================================="
 echo ""
+
+if [[ "$SERVE_STATIC" == "1" ]]; then
+  if [[ ! -f "$FRONTEND_DIST_DIR/index.html" ]]; then
+    echo "Static frontend build is missing: $FRONTEND_DIST_DIR/index.html"
+    if [[ -x "$FRONTEND_DIR/node_modules/.bin/ng" ]]; then
+      echo "Building frontend now..."
+      (cd "$FRONTEND_DIR" && npm run build) || {
+        echo "Frontend build failed. Run 'npm run build' inside $FRONTEND_DIR."
+        exit 1
+      }
+    else
+      echo "Error: Frontend dist not found and dependencies not installed."
+      exit 1
+    fi
+  fi
+
+  if [[ ! -x "$BACKEND_BIN" ]]; then
+    if [[ -f "$BACKEND_BIN" ]]; then
+      chmod +x "$BACKEND_BIN"
+    else
+      echo "Backend binary $BACKEND_BIN not found. Building now..."
+      (cd "$BACKEND_DIR" && go build -o "$BACKEND_BIN" main.go) || {
+        echo "Backend build failed. Ensure Go is installed."
+        exit 1
+      }
+      chmod +x "$BACKEND_BIN"
+    fi
+  fi
+
+  # Under systemd or when in production foreground, exec directly into the Go binary
+  # This provides clean journald logs, direct PID tracking, and graceful signal handling
+  cd "$BACKEND_DIR"
+  exec "$BACKEND_BIN"
+fi
 
 echo "Starting backend..."
 if [[ -x "$BACKEND_BIN" ]]; then
@@ -139,30 +195,6 @@ fi
 health="$(curl -sf "http://localhost:${BACKEND_PORT}/api/health")"
 echo "Backend ready: $health"
 echo ""
-
-if [[ "$SERVE_STATIC" == "1" ]]; then
-  if [[ ! -f "$FRONTEND_DIST_DIR/index.html" ]]; then
-    echo "Static frontend build is missing: $FRONTEND_DIST_DIR/index.html"
-    echo "Run npm run build in $FRONTEND_DIR before starting with SERVE_STATIC=1."
-    stop_process "$PID_BACKEND" "backend"
-    exit 1
-  fi
-
-  echo "Static app running. Press Ctrl+C to stop."
-  echo "  App:    http://localhost:${BACKEND_PORT}"
-  echo "  API:    http://localhost:${BACKEND_PORT}/api/health"
-  echo "  Logs:   $LOG_BACKEND"
-  echo ""
-
-  while true; do
-    if ! kill -0 "$(cat "$PID_BACKEND")" 2>/dev/null; then
-      echo "Backend exited. Last log lines:"
-      tail -n 50 "$LOG_BACKEND" || true
-      exit 1
-    fi
-    sleep 1
-  done
-fi
 
 echo "Starting frontend (ng serve)..."
 if [[ ! -x "$FRONTEND_DIR/node_modules/.bin/ng" ]]; then
