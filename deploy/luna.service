@@ -6,15 +6,16 @@ After=network.target
 Type=simple
 User=app
 Group=app
-WorkingDirectory=/srv/test/shoe-ecommerce
-Environment=ENV_FILE=/srv/test/shoe-ecommerce/backend/.env
-Environment=SERVE_STATIC=1
-Environment=FRONTEND_DIST_DIR=/srv/test/shoe-ecommerce/frontend/dist/frontend/browser
-ExecStart=/srv/test/shoe-ecommerce/run.sh
+WorkingDirectory=/srv/apps/zenu/shoe-ecommerce/backend
+Environment=ENV_FILE=/srv/apps/zenu/shoe-ecommerce/backend/.env
+Environment=APP_ENV=production
+Environment=FRONTEND_DIST_DIR=/srv/apps/zenu/shoe-ecommerce/frontend/dist/frontend/browser
+ExecStart=/srv/apps/zenu/shoe-ecommerce/backend/backend
 Restart=always
 RestartSec=5
 KillSignal=SIGTERM
 TimeoutStopSec=30
+LimitNOFILE=65535
 
 [Install]
 WantedBy=multi-user.target
